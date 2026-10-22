@@ -1163,9 +1163,9 @@ dialog.sheet { width: 100%; max-width: 440px; margin: auto auto 0; border-radius
         })));
         wrap.appendChild(h('p', { class: 'note', id: 'prio-note', text: '위에 있을수록 먼저 보여요. 체크 화면에도 이 순서대로 나와요.' }));
       }
-    }
-    [[''],
-     ['']].forEach(function (g) {
+}
+    [['영양제', '매일 꾸준히 챙겨 먹을 영양제를 켜두세요.'],
+     ['생활', '건강한 아기를 만나기 위한 좋은 습관이에요.']].forEach(function (g) {
       wrap.appendChild(h('div', { class: 'list-title', text: g[0] }));
       wrap.appendChild(h('div', { class: 'list' }, state.items.filter(function (i) { return i.tpl && i.group === g[0]; }).map(function (it) {
         return h('div', { class: 'row' + (it.enabled ? '' : ' is-off'), 'data-item': it.id },
