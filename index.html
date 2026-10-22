@@ -299,7 +299,7 @@ dialog.sheet { width: 100%; max-width: 440px; margin: auto auto 0; border-radius
 @media (prefers-reduced-motion: reduce) { * { transition: none !important; animation: none !important; } }
 
 /* 멘트 버튼 스타일 추가 (여기에 붙여넣기!) */
-.panel-title-wrap { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.panel-title-wrap { display: flex; align-items: center; justify-content: space-between; width: 100%; }
 .panel-title-wrap h2 { margin: 0; }
 .tag-today { margin-left: 6px; }
 .panel-short-btn { color: var(--primary-d); font-weight: 700; font-size: 15px; padding: 0; border: none; background: none; cursor: pointer; }
@@ -1530,10 +1530,13 @@ function panel(plan) {
     // 만약의 경우를 대비해 13자 이상이면 자르는 안전장치
     if (shortText.length > 13) shortText = shortText.substring(0, 12) + '…';
 
-    var el = h('section', { class: 'panel', id: 'day-panel', 'aria-label': C.fullLabel(day) + ' 상세' },
+    // 날짜 형식을 '10월 22일(목)' 형태로 조합
+    var displayDate = C.mdLabel(day) + '(' + C.WEEKDAYS[C.weekday(day)] + ')';
+
+    var el = h('section', { class: 'panel', id: 'day-panel', 'aria-label': displayDate + ' 상세' },
       h('div', { class: 'panel-head' },
         h('div', { class: 'panel-title-wrap' },
-          h('h2', { id: 'panel-title' }, C.fullLabel(day), isToday ? h('span', { class: 'tag tag-today', text: '오늘' }) : null),
+          h('h2', { id: 'panel-title' }, displayDate, isToday ? h('span', { class: 'tag tag-today', text: '오늘' }) : null),
           shortText ? h('button', {
             class: 'panel-short-btn',
             type: 'button',
@@ -1597,7 +1600,7 @@ function panel(plan) {
     renderSheet();
     dlg.showModal();
   }
-  function renderSheet() {
+function renderSheet() {
     if (!sheetEl) return;
     var f = captureFocus(), sy = sheetEl.scrollTop;
     var td = todayDay(), iso = ui.selected, day = C.isoToDay(iso), preg = state.settings.pregnancy, plan = getPlan();
@@ -1614,8 +1617,10 @@ function panel(plan) {
       if (info) levelText(info, plan).forEach(function (t) { ex.appendChild(h('p', { text: t })); });
       inner.appendChild(ex);
     }
+    
+    // 오늘의 체크리스트만 남기고, 기록(관계일, 생리, 임테기) 블록 호출 코드는 삭제함
     inner.appendChild(checklistBlock(iso, 'sh-'));
-    inner.appendChild(recordsBlock(iso, 'sh-'));
+    
     sheetEl.replaceChildren(inner);
     sheetEl.scrollTop = sy;
     if (f && f.inSheet) restoreFocus(f, sheetEl);
@@ -1647,7 +1652,7 @@ function panel(plan) {
     renderPopup();
     dlg.showModal();
   }
-  function renderPopup() {
+ function renderPopup() {
     if (!popupEl) return;
     var f = captureFocus(), sy = popupEl.scrollTop;
     var td = todayDay(), iso = C.dayToISO(td), list = C.itemsForDate(state, iso), checks = state.checks[iso] || {}, comp = C.completion(state, iso);
@@ -1662,8 +1667,12 @@ function panel(plan) {
         h('span', { class: 'popup-count', id: 'popup-count', text: comp.done + ' / ' + comp.total }),
         h('button', { class: 'icon-btn', type: 'button', id: 'popup-close', 'data-fid': 'pp-close', 'aria-label': '닫기', onclick: closePopup }, icon('close'))),
       h('div', { class: 'popup-list' }, rows),
-      h('div', { class: 'actions' },
-        h('button', { class: 'btn secondary', type: 'button', id: 'popup-today', text: '오늘 안 보기', onclick: hidePopupToday }))));
+      // 버튼 두 개를 나란히 배치 ('actions two' 클래스 사용)
+      h('div', { class: 'actions two' },
+        h('button', { class: 'btn secondary', type: 'button', id: 'popup-today', text: '오늘 안 보기', onclick: hidePopupToday }),
+        h('button', { class: 'btn', type: 'button', id: 'popup-ok', text: '확인', onclick: closePopup })
+      )
+    ));
     popupEl.scrollTop = sy;
     if (f && f.inPopup) restoreFocus(f, popupEl);
   }
