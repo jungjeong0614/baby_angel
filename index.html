@@ -307,6 +307,8 @@ dialog.sheet { width: 100%; max-width: 440px; margin: auto auto 0; border-radius
 .panel-short-btn { color: var(--primary-d); font-weight: 700; font-size: 15px; padding: 0; border: none; background: none; cursor: pointer; }
   /* 이메일 문의 스타일 추가 */
 .email-contact { text-align: center; margin-top: 8px; }
+  /* 첫 화면 이미지 스타일 */
+.hero-img { width: 100%; height: auto; border-radius: 24px; margin-bottom: 16px; display: block; }
 </style>
 </head>
 <body>
@@ -1019,20 +1021,15 @@ dialog.sheet { width: 100%; max-width: 440px; margin: auto auto 0; border-radius
 function consentScreen() {
     return h('main', { class: 'screen' },
       topBar(null, null),
-      h('div', { class: 'hero-card' },
-        h('h1', { class: 'hero-title', 'data-title': '1' },
-          '우리 아기 만나기 ', h('span', { 'aria-hidden': 'true', text: '👶' })),
-        h('p', { class: 'hero-line hero-main', id: 'consent-lead', text: '생리주기만 입력하면' }),
-        h('p', { class: 'hero-line hero-main', id: 'consent-lead', text: '가임기와 배란일을 알려줘요!' }),
-        h('p', { class: 'hero-line', text: '얼리테스트 기간도 확인하세요!' }),
-        h('p', { class: 'hero-line', text: '귀여운 아기를 만나기 전 생활습관도 매일체크!' })),
+      // 텍스트 대신 이미지 삽입
+      h('img', { class: 'hero-img', src: 'https://babyangel-pi.vercel.app/thumbnail1.png', alt: '생리주기만 입력하면 가임기와 배란일을 알려줘요!' }),
       h('p', { class: 'consent-note', text: '참고용 예측이에요 · 내 기기에만 저장돼요 · 필요한 건강정보만 다뤄요' }),
       h('div', { class: 'footer-actions' },
         h('button', { class: 'btn', type: 'button', id: 'consent-ok', 'data-fid': 'consent-ok', text: '동의하고 시작하기', onclick: function () {
           state.consent = true; save(); ui.datesMode = 'onboarding'; go('dates');
         } }),
         h('button', { class: 'link-btn', type: 'button', id: 'consent-policy', text: '자세히 보기', onclick: showPolicy }),
-        h('p', { class: 'muted email-contact', text: '문의 prayforyou.official@gmail.com' })
+        h('p', { class: 'muted email-contact', text: '문의: prayforyou.official@gmail.com' })
       ));
   }
 
