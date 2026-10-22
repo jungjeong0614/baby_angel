@@ -576,8 +576,8 @@ dialog.sheet { width: 100%; max-width: 440px; margin: auto auto 0; border-radius
     if (d === last) return { ok: false, error: '이미 생리 시작일로 기록돼 있어요.' };
     if (d < last) return { ok: false, error: '가장 최근 생리 시작일(' + mdLabel(last) + ') 이후 날짜만 기록할 수 있어요.' };
     var iv = d - last;
-    if (iv < 15) return { ok: false, error: '직전 생리 시작일과 간격이 15일보다 짧아요. 날짜를 확인해 주세요.' };
-    if (iv > 90) return { ok: false, error: '직전 생리 시작일과 간격이 90일보다 길어요. 날짜를 확인해 주세요.' };
+    if (iv < 15) return { ok: false, error: '최근 생리 시작일과 간격이 15일보다 짧아요. 날짜를 확인해 주세요.' };
+    if (iv > 90) return { ok: false, error: '최근 생리 시작일과 간격이 90일보다 길어요. 날짜를 확인해 주세요.' };
     return { ok: true, interval: iv, warning: (iv < 21 || iv > 35) ? '주기가 일반적인 범위(21~35일)를 벗어났어요.' : null };
   }
   // 이날을 "생리 종료일"로 기록할 수 있는지: 이날 이전의 가장 가까운 생리 시작일에 붙인다
@@ -1005,10 +1005,11 @@ dialog.sheet { width: 100%; max-width: 440px; margin: auto auto 0; border-radius
       h('div', { class: 'hero-card' },
         h('h1', { class: 'hero-title', 'data-title': '1' },
           '우리 아기 만나기 ', h('span', { 'aria-hidden': 'true', text: '👶' })),
-        h('p', { class: 'hero-line hero-main', id: 'consent-lead', text: '생리주기만 입력하면 배란일과 가임기를 알려줘요!' }),
+        h('p', { class: 'hero-line hero-main', id: 'consent-lead', text: '생리주기만 입력하면}),
+        h('p', { class: 'hero-line hero-main', id: 'consent-lead', text: '가임기, 배란일을 알려줘요!' }),
         h('p', { class: 'hero-line', text: '얼리테스트 기간도 확인하세요.' }),
-        h('p', { class: 'hero-line', text: '임신준비를 위한 생활습관도 한 눈에 check!' })),
-      h('p', { class: 'consent-note', text: '참고용 예측이에요  ·  내 기기에만 저장돼요  ·  필요한 건강정보만 다뤄요' }),
+        h('p', { class: 'hero-line', text: '임신준비를 위한 생활습관도 매일체크' })),
+      h('p', { class: 'consent-note', text: '참고용 예측이에요 · 내 기기에만 저장돼요 · 필요한 건강정보만 다뤄요' }),
       h('div', { class: 'footer-actions' },
         h('button', { class: 'btn', type: 'button', id: 'consent-ok', 'data-fid': 'consent-ok', text: '동의하고 시작하기', onclick: function () {
           state.consent = true; save(); ui.datesMode = 'onboarding'; go('dates');
@@ -1066,11 +1067,11 @@ dialog.sheet { width: 100%; max-width: 440px; margin: auto auto 0; border-radius
       h('h1', { class: 'title', 'data-title': '1', text: '최근 생리 기간을 알려주세요' }),
       h('p', { class: 'lead', text: '생리를 시작한 날과 끝난 날을 입력해 주세요. 종료일을 모르면 비워 두어도 괜찮아요.' }),
       d.third ? group('그 이전 생리 (선택)', 'in-a', 'a', 'in-aE', 'aE') : null,
-      group('직전 생리', 'in-b', 'b', 'in-bE', 'bE'),
+      group('이전 생리', 'in-b', 'b', 'in-bE', 'bE'),
       group('최근 생리', 'in-c', 'c', 'in-cE', 'cE'),
       derived,
-      h('button', { class: 'link-btn', type: 'button', id: 'dates-toggle-third', text: d.third ? '더 이전 날짜 추가 안 하기' : '더 이전 생리 기간 추가하기 (선택)', onclick: function () { d.third = !d.third; if (!d.third) { d.a = ''; d.aE = ''; } render(); } }),
-      h('p', { class: 'muted', text: '3번의 기간을 입력하면 주기가 불규칙한지도 함께 살펴봐요. 종료일을 입력하면 다음 생리 예정 기간도 보여줘요.' }),
+      h('button', { class: 'link-btn', type: 'button', id: 'dates-toggle-third', text: d.third ? '생리주기 추가하기' : '생리주기 추가하기(선택)', onclick: function () { d.third = !d.third; if (!d.third) { d.a = ''; d.aE = ''; } render(); } }),
+      h('p', { class: 'muted', text: '3번의 기간을 입력하면 주기가 불규칙한지도 함께 살펴봐요. 다음 생리 예정 기간도 보여줘요.' }),
       h('div', { class: 'footer-actions' }, nextBtn));
     update();
     return node;
