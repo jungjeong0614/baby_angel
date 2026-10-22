@@ -185,15 +185,11 @@ button.icon-btn[disabled]:hover { background: transparent; }
 .cell.is-selected { box-shadow: inset 0 0 0 2px var(--primary); }
 .cell.bleed { background: var(--bleed); }
 .cell.bleed-pred { background: #fff; border: 2px dashed var(--bleed-line); }
-.cell.lv-4 { background: var(--lv4); color: #fff; font-weight: 700; }
-.cell.lv-4 .ev { color: #fff; }
-.cell.lv-4 .dot { background: #fff; }
-.cell.lv-4 .bar { background: rgba(255,255,255,.4); }
-.cell.lv-4 .bar i { background: #fff; }
-.cell.lv-4.is-today .num { background: #fff; color: var(--lv4); }
+.cell.lv-4 { background: var(--lv4); font-weight: 700; }
 .cell.lv-3 { background: var(--lv3); font-weight: 600; }
 .cell.lv-2 { background: var(--lv2); }
-.cell.lv-1 { background: #fff; border: 2px dashed var(--lv1-line); }
+.cell.lv-1 { background: transparent; border: 2px solid transparent; }
+.curve .h1 { background: transparent; border: none; }
 .cell.early-rec { background: var(--early-rec); }
 .cell.early-low { background: var(--early-low); border: 2px dashed var(--early-line); }
 .cell.early-rec .ev, .cell.early-low .ev { color: var(--early-ink); }
@@ -1448,7 +1444,7 @@ dialog.sheet { width: 100%; max-width: 440px; margin: auto auto 0; border-radius
     if (hasRec) parts.push('기록 있음');
     return parts.join(', ');
   }
-  function calendar(plan) {
+function calendar(plan) {
     var td = todayDay(), y = ui.month.y, m = ui.month.m;
     var first = C.isoToDay(y + '-' + C.pad2(m) + '-01'), dim = C.daysInMonth(y, m), lead = C.weekday(first);
     var preg = state.settings.pregnancy;
@@ -1461,10 +1457,10 @@ dialog.sheet { width: 100%; max-width: 440px; margin: auto auto 0; border-radius
       var isActualStart = state.starts.indexOf(iso) >= 0;
       var rr = state.records[iso];
       var hasRec = !!rr || isActualStart;
-      // 관계일: 기록 사용 + 표시 설정이 모두 켜져 있으면 ♥, 아니면 중립 점
+      
+      // 관계일: 기록 사용 + 표시 설정이 모두 켜져 있으면 ♥
       var sexMark = !!(rr && rr.sex && state.settings.sex && state.settings.sexMark);
-      var otherRec = !!(rr && rr.test) || isActualStart;
-      var showDot = hasRec && !(sexMark && !otherRec);
+      
       var cls = 'cell';
       if (info && info.level) cls += ' lv-' + info.level;
       if (info && info.early === 'rec') cls += ' early-rec';
@@ -1475,11 +1471,13 @@ dialog.sheet { width: 100%; max-width: 440px; margin: auto auto 0; border-radius
       if (day === td) cls += ' is-today';
       if (iso === ui.selected) cls += ' is-selected';
       if (day > td) cls += ' is-future';
+      
       var ev = '';
       if (info && info.isOvulation) ev = '◆';
       else if (isActualStart) ev = '▲';
       else if (info && info.period === 'predicted') ev = '△';
-      else if (info && info.early === 'rec' && info.offset === 10) ev = '✚';
+      // 권장시작(✚) 기호 조건문 삭제됨
+      
       var attrs = {
         class: cls, type: 'button', 'data-date': iso, 'data-fid': 'cell-' + iso, 'aria-label': cellLabel(day, info, comp, hasRec, sexMark),
         'aria-pressed': iso === ui.selected ? 'true' : 'false', onclick: (function (x) { return function () { selectDate(x); }; })(iso)
@@ -1495,9 +1493,10 @@ dialog.sheet { width: 100%; max-width: 440px; margin: auto auto 0; border-radius
       if (comp.total) attrs['data-progress'] = comp.done + '/' + comp.total;
       if (hasRec) attrs['data-rec'] = '1';
       if (sexMark) attrs['data-sex'] = '1';
+      
       var cell = h('button', attrs, h('span', { class: 'num', text: String(i + 1) }), ev ? h('span', { class: 'ev', 'aria-hidden': 'true', text: ev }) : null,
         sexMark ? h('span', { class: 'heart', 'aria-hidden': 'true', text: '♥' }) : null,
-        showDot ? h('span', { class: 'dot' + (sexMark ? ' second' : ''), 'aria-hidden': 'true' }) : null,
+        // 기록(●) 기호 코드 삭제됨
         comp.total ? h('span', { class: 'bar', 'aria-hidden': 'true' }, h('i')) : null);
       if (comp.total) cell.querySelector('.bar i').style.setProperty('--p', String(comp.done / comp.total));
       grid.appendChild(cell);
@@ -1506,12 +1505,16 @@ dialog.sheet { width: 100%; max-width: 440px; margin: auto auto 0; border-radius
   }
   function monthLabelText() { return ui.month.y + '년 ' + ui.month.m + '월 달력'; }
 
-  function legend() {
+function legend() {
     if (state.settings.pregnancy) return null;
     var s = function (cls) { return h('i', { class: 'sw ' + cls }); };
     return h('div', { class: 'legend', 'aria-label': '범례', id: 'legend' },
-      h('span', null, s('lv4'), '가장 높음'), h('span', null, s('lv3'), '높음'), h('span', null, s('lv2'), '보통'), h('span', null, s('lv1'), '낮음'),
-      h('span', null, s('er'), '얼리 임테기'), h('span', null, s('bd'), '생리 기간'), h('span', null, '◆ 배란일'), h('span', null, '△ 생리 예정'), h('span', null, '✚ 권장 시작'), h('span', null, '● 기록'), state.settings.sex && state.settings.sexMark ? h('span', { id: 'legend-sex' }, '♥ 관계일') : null);
+      h('span', null, s('lv3'), '가임기'),
+      h('span', null, s('er'), '얼리 임테기'),
+      h('span', null, s('bd'), '생리 기간'),
+      h('span', null, '◆ 배란일'),
+      h('span', null, '△ 생리 예정'),
+      state.settings.sex && state.settings.sexMark ? h('span', { id: 'legend-sex' }, '♥ 관계일') : null);
   }
 
 function panel(plan) {
