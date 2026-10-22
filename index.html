@@ -979,10 +979,15 @@ dialog.sheet { width: 100%; max-width: 440px; margin: auto auto 0; border-radius
     if (sheetEl) renderSheet();
     if (popupEl) renderPopup();
   }
-  function go(screen, extra) {
+ function go(screen, extra) {
     closeSheet(); closePopup();
     ui.screen = screen; if (extra) Object.keys(extra).forEach(function (k) { ui[k] = extra[k]; });
     render({ focusTitle: true, top: true });
+    
+    // 👇 화면이 바뀔 때마다 GA4에 어느 화면(screen)인지 전송하는 코드
+    if (typeof window.gtag === 'function') {
+      window.gtag('event', 'page_view', { page_title: screen, page_path: '/' + screen });
+    }
   }
 
   /* =============== 공통 컴포넌트 =============== */
@@ -1021,11 +1026,12 @@ dialog.sheet { width: 100%; max-width: 440px; margin: auto auto 0; border-radius
 function consentScreen() {
     return h('main', { class: 'screen' },
       topBar(null, null),
-      // 텍스트 대신 이미지 삽입
       h('img', { class: 'hero-img', src: 'https://babyangel-pi.vercel.app/thumbnail1.png', alt: '생리주기만 입력하면 가임기와 배란일을 알려줘요!' }),
       h('p', { class: 'consent-note', text: '참고용 예측이에요 · 내 기기에만 저장돼요 · 필요한 건강정보만 다뤄요' }),
       h('div', { class: 'footer-actions' },
         h('button', { class: 'btn', type: 'button', id: 'consent-ok', 'data-fid': 'consent-ok', text: '동의하고 시작하기', onclick: function () {
+          // 👇 GA 추적 코드 추가
+          if (typeof window.gtag === 'function') window.gtag('event', 'click_button', { button_name: '동의하고_시작하기' });
           state.consent = true; save(); ui.datesMode = 'onboarding'; go('dates');
         } }),
         h('button', { class: 'link-btn', type: 'button', id: 'consent-policy', text: '자세히 보기', onclick: showPolicy }),
@@ -1034,12 +1040,11 @@ function consentScreen() {
   }
 
   /* =============== S1. 생리 시작일 입력 =============== */
-  function datesScreen() {
+function datesScreen() {
     var td = todayDay(), max = C.dayToISO(td), d = ui.draft, edit = ui.datesMode === 'edit';
     var derived = h('div', { id: 'dates-derived', 'aria-live': 'polite' });
     var nextBtn = h('button', { class: 'btn', type: 'button', id: 'dates-next', 'data-fid': 'dates-next', disabled: true, text: edit ? '저장하기' : '다음', onclick: onNext });
 
-    // 오래된 → 최근 순. 종료일은 선택 입력
     function list() {
       var l = [];
       if (d.third && d.a) l.push({ start: d.a, end: d.aE });
@@ -1058,6 +1063,8 @@ function consentScreen() {
       nextBtn.disabled = false;
     }
     function onNext() {
+      // 👇 GA 추적 코드 추가 (다음 / 저장하기)
+      if (typeof window.gtag === 'function') window.gtag('event', 'click_button', { button_name: edit ? '생리기간_저장하기' : '생리기간_다음' });
       var l = list(), v = C.validatePeriods(l, td);
       if (!v.ok) { update(); return; }
       var ends = Object.create(null);
@@ -1086,7 +1093,7 @@ function consentScreen() {
       group('이전 생리', 'in-b', 'b', 'in-bE', 'bE'),
       group('마지막 생리', 'in-c', 'c', 'in-cE', 'cE'),
       derived,
-      h('button', { class: 'link-btn', type: 'button', id: 'dates-toggle-third', text: d.third ? '더 이전 날짜 추가 안 하기' : '생리주기 더 추가하기 (선택)', onclick: function () { d.third = !d.third; if (!d.third) { d.a = ''; d.aE = ''; } render(); } }),
+      h('button', { class: 'link-btn', type: 'button', id: 'dates-toggle-third', text: d.third ? '더 이전 날짜 추가 안 하기' : '생리 주기 더 추가하기 (선택)', onclick: function () { d.third = !d.third; if (!d.third) { d.a = ''; d.aE = ''; } render(); } }),
       h('p', { class: 'muted', text: '3번의 기간을 입력하면 주기가 불규칙한지도 함께 살펴봐요. 종료일을 입력하면 다음 생리 예정 기간도 보여줘요.' }),
       h('div', { class: 'footer-actions' }, nextBtn));
     update();
@@ -1205,14 +1212,18 @@ function consentScreen() {
   function anyEnabled() { return state.items.some(function (i) { return i.enabled && !i.deleted; }); }
 
   /* =============== S1-2. 체크 항목 선택 (온보딩) =============== */
-  function itemsScreen() {
+function itemsScreen() {
     return h('main', { class: 'screen' },
       topBar(null, function () { ui.datesMode = 'onboarding'; ui.draft = draftFromState(); go('dates'); }),
       h('h1', { class: 'title', 'data-title': '1', text: '챙기고 싶은 항목을 골라보세요' }),
       h('p', { class: 'lead', text: '나중에 언제든 바꿀 수 있어요. 건너뛰어도 괜찮아요.' }),
       itemsEditor(),
       h('div', { class: 'footer-actions' },
-        h('button', { class: 'btn' + (anyEnabled() ? '' : ' secondary'), type: 'button', id: 'items-done', 'data-fid': 'items-done', text: anyEnabled() ? '시작하기' : '건너뛰기', onclick: function () { go('home'); } })));
+        h('button', { class: 'btn' + (anyEnabled() ? '' : ' secondary'), type: 'button', id: 'items-done', 'data-fid': 'items-done', text: anyEnabled() ? '시작하기' : '건너뛰기', onclick: function () {
+          // 👇 GA 추적 코드 추가 (시작하기 / 건너뛰기 둘 다 잡아냄)
+          if (typeof window.gtag === 'function') window.gtag('event', 'click_button', { button_name: anyEnabled() ? '항목선택_시작하기' : '항목선택_건너뛰기' });
+          go('home');
+        } })));
   }
 
   /* =============== S4. 체크 항목 관리 =============== */
@@ -1266,8 +1277,12 @@ function settingsScreen() {
         h('button', { class: 'row-btn', type: 'button', id: 'set-policy', onclick: showPolicy }, h('div', { class: 'grow' }, h('div', { class: 'name', text: '개인정보 안내' })), icon('next'))),
       h('p', { class: 'note', text: '기록은 최근 24개월까지 보관하고, 오래된 기록은 자동으로 지워져요. 모든 정보는 이 기기 안에만 있어요.' }),
       h('div', { class: 'footer-actions' }, 
-        h('button', { class: 'btn danger', type: 'button', id: 'set-delete-all', text: '내 정보 전체 삭제', onclick: confirmDeleteAll }),
-        h('p', { class: 'muted email-contact', text: '문의 prayforyou.official@gmail.com' })
+        h('button', { class: 'btn danger', type: 'button', id: 'set-delete-all', text: '내 정보 전체 삭제', onclick: function() {
+          // 👇 GA 추적 코드 추가
+          if (typeof window.gtag === 'function') window.gtag('event', 'click_button', { button_name: '설정_데이터전체삭제' });
+          confirmDeleteAll();
+        } }),
+        h('p', { class: 'muted email-contact', text: '문의: prayforyou.official@gmail.com' })
       )
     );
   }
@@ -1566,12 +1581,16 @@ function panel(plan) {
     el.appendChild(recordsBlock(iso, ''));
     return el;
   }
-  function homeScreen() {
+function homeScreen() {
     var plan = getPlan(), preg = state.settings.pregnancy, td = todayDay();
     var tp = C.dayToParts(td), notToday = ui.selected !== C.dayToISO(td) || ui.month.y !== tp.y || ui.month.m !== tp.m;
     return h('main', { class: 'screen' },
       h('div', { class: 'top' }, h('h1', { 'data-title': '1', text: '임신 준비 캘린더' }),
-        h('button', { class: 'icon-btn', type: 'button', id: 'btn-settings', 'data-fid': 'btn-settings', 'aria-label': '설정', onclick: function () { go('settings'); } }, icon('sliders'))),
+        h('button', { class: 'icon-btn', type: 'button', id: 'btn-settings', 'data-fid': 'btn-settings', 'aria-label': '설정', onclick: function () {
+          // 👇 GA 추적 코드 추가
+          if (typeof window.gtag === 'function') window.gtag('event', 'click_button', { button_name: '홈_설정' });
+          go('settings'); 
+        } }, icon('sliders'))),
       ui.storageLost ? h('div', { class: 'banner warn', id: 'storage-banner', role: 'status' }, h('span', { text: '이 환경에서는 저장할 수 없어서, 앱을 닫으면 입력한 내용이 사라져요.' })) : null,
       preg ? h('div', { class: 'banner preg', id: 'preg-banner' }, h('span', { text: '임신 확인 모드예요. 가임기·검사 시기 표시를 숨겼어요.' }), h('button', { type: 'button', id: 'preg-off', text: '되돌리기', onclick: function () { setPregnancy(false); } })) : null,
       h('div', { class: 'cal-card' },
@@ -1666,7 +1685,7 @@ function renderSheet() {
     renderPopup();
     dlg.showModal();
   }
- function renderPopup() {
+function renderPopup() {
     if (!popupEl) return;
     var f = captureFocus(), sy = popupEl.scrollTop;
     var td = todayDay(), iso = C.dayToISO(td), list = C.itemsForDate(state, iso), checks = state.checks[iso] || {}, comp = C.completion(state, iso);
@@ -1679,14 +1698,28 @@ function renderSheet() {
       h('div', { class: 'popup-head' },
         h('div', null, h('h2', { id: 'popup-title', text: '오늘의 체크' }), h('p', { class: 'status', id: 'popup-sub', text: C.fullLabel(td) })),
         h('span', { class: 'popup-count', id: 'popup-count', text: comp.done + ' / ' + comp.total }),
-        h('button', { class: 'icon-btn', type: 'button', id: 'popup-close', 'data-fid': 'pp-close', 'aria-label': '닫기', onclick: closePopup }, icon('close'))),
+        h('button', { class: 'icon-btn', type: 'button', id: 'popup-close', 'data-fid': 'pp-close', 'aria-label': '닫기', onclick: function() {
+          // 👇 GA 추적 코드 추가 (X버튼)
+          if (typeof window.gtag === 'function') window.gtag('event', 'click_button', { button_name: '팝업_X닫기' });
+          closePopup();
+        } }, icon('close'))),
       h('div', { class: 'popup-list' }, rows),
-      // 버튼 두 개를 나란히 배치 ('actions two' 클래스 사용)
       h('div', { class: 'actions two' },
-        h('button', { class: 'btn secondary', type: 'button', id: 'popup-today', text: '오늘 안 보기', onclick: hidePopupToday }),
-        h('button', { class: 'btn', type: 'button', id: 'popup-ok', text: '확인', onclick: closePopup })
+        h('button', { class: 'btn secondary', type: 'button', id: 'popup-today', text: '오늘 안 보기', onclick: function() {
+          // 👇 GA 추적 코드 추가 (오늘 안보기)
+          if (typeof window.gtag === 'function') window.gtag('event', 'click_button', { button_name: '팝업_오늘안보기' });
+          hidePopupToday();
+        } }),
+        h('button', { class: 'btn', type: 'button', id: 'popup-ok', text: '확인', onclick: function() {
+          // 👇 GA 추적 코드 추가 (확인)
+          if (typeof window.gtag === 'function') window.gtag('event', 'click_button', { button_name: '팝업_확인' });
+          closePopup();
+        } })
       )
     ));
+    popupEl.scrollTop = sy;
+    if (f && f.inPopup) restoreFocus(f, popupEl);
+  }
     popupEl.scrollTop = sy;
     if (f && f.inPopup) restoreFocus(f, popupEl);
   }
