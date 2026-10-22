@@ -297,6 +297,12 @@ dialog.sheet { width: 100%; max-width: 440px; margin: auto auto 0; border-radius
 .toast.error { background: var(--danger); }
 
 @media (prefers-reduced-motion: reduce) { * { transition: none !important; animation: none !important; } }
+
+/* 멘트 버튼 스타일 추가 (여기에 붙여넣기!) */
+.panel-title-wrap { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.panel-title-wrap h2 { margin: 0; }
+.tag-today { margin-left: 6px; }
+.panel-short-btn { color: var(--primary-d); font-weight: 700; font-size: 15px; padding: 0; border: none; background: none; cursor: pointer; }
 </style>
 </head>
 <body>
@@ -1508,7 +1514,7 @@ dialog.sheet { width: 100%; max-width: 440px; margin: auto auto 0; border-radius
       h('span', null, s('er'), '얼리 임테기'), h('span', null, s('bd'), '생리 기간'), h('span', null, '◆ 배란일'), h('span', null, '△ 생리 예정'), h('span', null, '✚ 권장 시작'), h('span', null, '● 기록'), state.settings.sex && state.settings.sexMark ? h('span', { id: 'legend-sex' }, '♥ 관계일') : null);
   }
 
- function panel(plan) {
+function panel(plan) {
     var td = todayDay(), iso = ui.selected, day = C.isoToDay(iso), isToday = day === td;
     var preg = state.settings.pregnancy;
     var info = plan && !preg ? C.dayInfo(plan, day) : null;
@@ -1526,10 +1532,10 @@ dialog.sheet { width: 100%; max-width: 440px; margin: auto auto 0; border-radius
 
     var el = h('section', { class: 'panel', id: 'day-panel', 'aria-label': C.fullLabel(day) + ' 상세' },
       h('div', { class: 'panel-head' },
-        h('div', { style: 'display: flex; align-items: center; gap: 10px; flex-wrap: wrap;' },
-          h('h2', { id: 'panel-title', style: 'margin: 0;' }, C.fullLabel(day), isToday ? h('span', { class: 'tag', style: 'margin-left: 6px;', text: '오늘' }) : null),
+        h('div', { class: 'panel-title-wrap' },
+          h('h2', { id: 'panel-title' }, C.fullLabel(day), isToday ? h('span', { class: 'tag tag-today', text: '오늘' }) : null),
           shortText ? h('button', {
-            style: 'color: var(--primary-d); font-weight: 700; font-size: 15px; padding: 0; border: none; background: none; cursor: pointer;',
+            class: 'panel-short-btn',
             type: 'button',
             onclick: openSheet,
             text: shortText + ' >'
@@ -1543,7 +1549,6 @@ dialog.sheet { width: 100%; max-width: 440px; margin: auto auto 0; border-radius
     el.appendChild(recordsBlock(iso, ''));
     return el;
   }
-
   function homeScreen() {
     var plan = getPlan(), preg = state.settings.pregnancy, td = todayDay();
     var tp = C.dayToParts(td), notToday = ui.selected !== C.dayToISO(td) || ui.month.y !== tp.y || ui.month.m !== tp.m;
