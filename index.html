@@ -264,7 +264,7 @@ button.icon-btn[disabled]:hover { background: transparent; }
 .curve .h1 { height: 22%; background: #fff; border: 2px dashed var(--lv1-line); }
 .curve .d { font-size: 11px; color: var(--sub); line-height: 1; padding-bottom: 2px; letter-spacing: -0.04em; white-space: nowrap; }
 .curve button.on .d { color: var(--primary-d); font-weight: 700; }
-.curve button.on { box-shadow: inset 0 -3px 0 var(--primary); }
+.curve button.on { box-shadow: none; }
 .curve .o { font-size: 10px; line-height: 1; color: var(--ink); font-weight: 700; height: 10px; }
 
 /* ---------- 다이얼로그 / 시트 ---------- */
@@ -1058,7 +1058,7 @@ function datesScreen() {
       nextBtn.disabled = false;
     }
     function onNext() {
-      // 👇 GA 추적 코드 추가 (다음 / 저장하기)
+      // 👇 GA 추적 코드 유지됨
       if (typeof window.gtag === 'function') window.gtag('event', 'click_button', { button_name: edit ? '생리기간_저장하기' : '생리기간_다음' });
       var l = list(), v = C.validatePeriods(l, td);
       if (!v.ok) { update(); return; }
@@ -1084,9 +1084,12 @@ function datesScreen() {
       topBar(null, function () { if (edit) go('settings'); else { state.consent = false; save(); go('consent'); } }),
       h('h1', { class: 'title', 'data-title': '1', text: '마지막 생리 기간을 알려주세요' }),
       h('p', { class: 'lead', text: '생리를 시작한 날과 끝난 날을 입력해 주세요. 종료일을 모르면 비워 두어도 괜찮아요.' }),
-      d.third ? group('그 이전 생리 (선택)', 'in-a', 'a', 'in-aE', 'aE') : null,
-      group('이전 생리', 'in-b', 'b', 'in-bE', 'bE'),
+      
+      // 👇 입력 순서를 마지막 생리 -> 이전 생리 -> 그 이전 생리 순으로 배치
       group('마지막 생리', 'in-c', 'c', 'in-cE', 'cE'),
+      group('이전 생리', 'in-b', 'b', 'in-bE', 'bE'),
+      d.third ? group('그 이전 생리 (선택)', 'in-a', 'a', 'in-aE', 'aE') : null,
+      
       derived,
       h('button', { class: 'link-btn', type: 'button', id: 'dates-toggle-third', text: d.third ? '더 이전 날짜 추가 안 하기' : '생리 주기 더 추가하기 (선택)', onclick: function () { d.third = !d.third; if (!d.third) { d.a = ''; d.aE = ''; } render(); } }),
       h('p', { class: 'muted', text: '3번의 기간을 입력하면 주기가 불규칙한지도 함께 살펴봐요. 종료일을 입력하면 다음 생리 예정 기간도 보여줘요.' }),
@@ -1391,7 +1394,7 @@ function settingsScreen() {
       });
       if (future) sec.appendChild(h('p', { class: 'note', text: '아직 오지 않은 날짜는 체크할 수 없어요.' }));
     } else if (!anyEnabled()) {
-      sec.appendChild(h('div', { class: 'empty' }, h('p', { text: '아직 체크 항목이 없어요. 챙기고 싶은 항목을 골라 보세요.' }),
+      sec.appendChild(h('div', { class: 'empty' }, h('p', { text: '아직 체크 항목이 없어요.' }),
         h('button', { class: 'btn secondary small', type: 'button', id: pfx + 'empty-add', text: '항목 추가하기', onclick: function () { go('manage'); } })));
     } else {
       sec.appendChild(h('div', { class: 'empty' }, h('p', { text: future ? '아직 오지 않은 날짜예요.' : '이 날짜에 해당하는 항목이 없어요.' })));
@@ -1530,9 +1533,9 @@ function legend() {
     var s = function (cls) { return h('i', { class: 'sw ' + cls }); };
     return h('div', { class: 'legend', 'aria-label': '범례', id: 'legend' },
       h('span', null, s('lv3'), '가임기'),
+      h('span', null, '◆ 배란일'),
       h('span', null, s('er'), '얼리 임테기'),
       h('span', null, s('bd'), '생리 기간'),
-      h('span', null, '◆ 배란일'),
       h('span', null, '△ 생리 예정'),
       state.settings.sex && state.settings.sexMark ? h('span', { id: 'legend-sex' }, '♥ 관계일') : null);
   }
@@ -1571,8 +1574,11 @@ function panel(plan) {
     );
 
     if (plan && !preg) { var cv = curveBlock(plan, day); if (cv) el.appendChild(cv); }
-    el.appendChild(checklistBlock(iso, ''));
+    
+    // 👇 순서 변경: 기록(records) 위젯이 체크리스트(checklist)보다 먼저 오도록 수정
     el.appendChild(recordsBlock(iso, ''));
+    el.appendChild(checklistBlock(iso, ''));
+    
     return el;
   }
 function homeScreen() {
