@@ -342,19 +342,14 @@ dialog.sheet { width: 100%; max-width: 440px; margin: auto auto 0; border-radius
   var LEVEL_LABEL = { 4: '가장 높음', 3: '높음', 2: '보통', 1: '낮음' };
   var WEEKDAYS = ['일', '월', '화', '수', '목', '금', '토'];
 
-  var TEMPLATES = [
+var TEMPLATES = [
     { id: 'tpl_folic', name: '엽산', group: '영양제' },
-    { id: 'tpl_multi', name: '종합 비타민', group: '영양제' },
     { id: 'tpl_vitd', name: '비타민D', group: '영양제' },
     { id: 'tpl_probiotic', name: '유산균', group: '영양제' },
     { id: 'tpl_omega3', name: '오메가3', group: '영양제' },
     { id: 'tpl_coq10', name: '코큐텐', group: '영양제' },
-    { id: 'tpl_water', name: '따뜻한 물 마시기', group: '생활' },
-    { id: 'tpl_walk', name: '걷기·가벼운 운동', group: '생활' },
-    { id: 'tpl_sleep', name: '충분한 수면', group: '생활' },
     { id: 'tpl_noalc', name: '금주', group: '생활' },
-    { id: 'tpl_nosmoke', name: '금연', group: '생활' },
-    { id: 'tpl_caffeine', name: '카페인 줄이기', group: '생활' }
+    { id: 'tpl_nosmoke', name: '금연', group: '생활' }
   ];
 
   /* ---------------- 날짜 유틸 ---------------- */
@@ -1035,7 +1030,7 @@ function consentScreen() {
           state.consent = true; save(); ui.datesMode = 'onboarding'; go('dates');
         } }),
         h('button', { class: 'link-btn', type: 'button', id: 'consent-policy', text: '자세히 보기', onclick: showPolicy }),
-        h('p', { class: 'muted email-contact', text: '문의: prayforyou.official@gmail.com' })
+        h('p', { class: 'muted email-contact', text: '문의 prayforyou.official@gmail.com' })
       ));
   }
 
@@ -1155,7 +1150,7 @@ function datesScreen() {
         { label: '취소', kind: 'ghost', id: 'del-cancel' }]
     });
   }
-  function itemsEditor(opts) {
+function itemsEditor(opts) {
     var wrap = h('div');
     if (opts && opts.priority) {
       wrap.appendChild(h('div', { class: 'list-title', text: '우선순위' }));
@@ -1173,16 +1168,15 @@ function datesScreen() {
         })));
         wrap.appendChild(h('p', { class: 'note', id: 'prio-note', text: '위에 있을수록 먼저 보여요. 체크 화면에도 이 순서대로 나와요.' }));
       }
-}
-    [['영양제', '매일 꾸준히 챙겨 먹을 영양제를 켜두세요.'],
-     ['생활', '건강한 아기를 만나기 위한 좋은 습관이에요.']].forEach(function (g) {
-      wrap.appendChild(h('div', { class: 'list-title', text: g[0] }));
-      wrap.appendChild(h('div', { class: 'list' }, state.items.filter(function (i) { return i.tpl && i.group === g[0]; }).map(function (it) {
+    }
+    // 👇 설명글을 빼고 그룹 이름('영양제', '생활')만 남김
+    ['영양제', '생활'].forEach(function (g) {
+      wrap.appendChild(h('div', { class: 'list-title', text: g }));
+      wrap.appendChild(h('div', { class: 'list' }, state.items.filter(function (i) { return i.tpl && i.group === g; }).map(function (it) {
         return h('div', { class: 'row' + (it.enabled ? '' : ' is-off'), 'data-item': it.id },
           h('div', { class: 'grow' }, h('div', { class: 'name', text: it.name })),
           switchBtn(it.name + ' 사용', it.enabled, function () { setItemEnabled(it.id, !it.enabled); }, 'sw-' + it.id));
       })));
-      wrap.appendChild(h('p', { class: 'note', text: g[1] }));
     });
     var customs = state.items.filter(function (i) { return !i.tpl && !i.deleted; });
     wrap.appendChild(h('div', { class: 'list-title', text: '직접 추가' }));
@@ -1282,7 +1276,7 @@ function settingsScreen() {
           if (typeof window.gtag === 'function') window.gtag('event', 'click_button', { button_name: '설정_데이터전체삭제' });
           confirmDeleteAll();
         } }),
-        h('p', { class: 'muted email-contact', text: '문의: prayforyou.official@gmail.com' })
+        h('p', { class: 'muted email-contact', text: '문의 prayforyou.official@gmail.com' })
       )
     );
   }
