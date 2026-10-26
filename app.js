@@ -1426,7 +1426,10 @@ function showShareModal() {
     openModal({
       title: '👨‍👩‍👦 남편에게 캘린더 공유',
       body: h('div', null,
-        h('p', { class: 'muted', text: '닉네임과 생리기간, 가임기, 배란일이 공유돼요! 링크를 아는 사람은 누구나 볼 수 있으니 남편에게만 보내주세요.' }),
+        h('p', { class: 'muted', text: '닉네임과 생리기간, 가임기, 배란일이 공유돼요! 
+          링크를 아는 사람은 누구나 볼 수 있으니 남편에게만 보내주세요.
+          
+          ' }),
         h('button', { class: 'btn secondary', type: 'button', id: 'share-copy', text: '🔗 공유 링크 보내기', onclick: shareCalendar })
       ),
       actions: [
