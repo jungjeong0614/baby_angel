@@ -468,7 +468,7 @@
     return st;
   }
 
-  /* ---------------- 파트너 공유 링크 ---------------- */
+  /* ---------------- 남편 공유 링크 ---------------- */
   // 링크로 들어온 외부 값을 allowlist로 검증한다. 하나라도 어긋나면 null (fail-closed)
   function sanitizeShare(raw, todayDay) {
     if (!raw || typeof raw !== 'object' || Array.isArray(raw) || raw.v !== 1) return null;
@@ -550,7 +550,7 @@
     return C.sanitizeState(raw, todayDay());
   }
 
-  /* ---- 파트너 공유 링크(#s=...) ----
+  /* ---- 남편 공유 링크(#s=...) ----
    * 데이터는 URL 해시에만 담겨 서버로 전송되지 않는다.
    * 링크로 열린 화면(viewOnly)은 읽기 전용이며 어떤 값도 저장소에 쓰지 않는다. */
   function encodeShare(obj) {
@@ -749,7 +749,7 @@
         h('ul', null,
           h('li', { text: '위 정보는 이 기기 안에만 저장해요. 서버나 분석 도구로 보내지 않아요.' }),
           h('li', { text: '화면 이동·버튼 클릭 같은 이용 통계만 익명으로 수집해요.' }),
-          h('li', { text: '파트너 공유 링크를 만들면 닉네임과 생리 시작·종료일이 링크 안에 담겨요. 서버에는 저장되지 않아요.' })),
+          h('li', { text: '남편 공유 링크를 만들면 닉네임과 생리 시작·종료일이 링크 안에 담겨요. 서버에는 저장되지 않아요.' })),
         h('h3', { text: '보관과 삭제' }),
         h('ul', null, h('li', { text: '기록은 최근 24개월까지 보관하고, 오래된 기록은 자동으로 지워져요.' }), h('li', { text: '설정에서 언제든 모든 정보를 한 번에 삭제할 수 있어요.' })),
         h('h3', { text: '참고용 서비스예요' }),
@@ -832,7 +832,7 @@
       h('p', { class: 'lead', text: '생리를 시작한 날과 끝난 날을 입력해 주세요. 종료일을 모르면 비워 두어도 괜찮아요.' }),
 
       nickField,
-      h('p', { class: 'muted', text: '파트너와 캘린더를 공유할 때 \'닉네임님\'으로 보여요.' }),
+      h('p', { class: 'muted', text: '남편와 캘린더를 공유할 때 \'닉네임님\'으로 보여요.' }),
 
       // 👇 입력 순서: 마지막 생리 -> 이전 생리 -> 그 이전 생리
       group('마지막 생리', 'in-c', 'c', 'in-cE', 'cE'),
@@ -999,7 +999,7 @@
     });
   }
 
-  /* ---- 파트너 공유 링크 만들기 ---- */
+  /* ---- 남편 공유 링크 만들기 ---- */
   function buildShareUrl() {
     // 기록·체크 항목은 담지 않는다: 닉네임, 생리 시작·종료일, 공유한 날짜만
     var payload = { v: 1, n: state.nick, d: todayISO(), s: state.starts, e: state.ends };
@@ -1050,8 +1050,8 @@
 
       h('div', { class: 'footer-actions' },
         h('div', { class: 'card' },
-          h('h3', { text: '👨‍👩‍👦 파트너에게 캘린더 공유' }),
-          h('p', { class: 'muted', text: '닉네임과 생리 기간만 공유돼요. 관계일·임테기·체크 기록은 공유되지 않아요. 링크를 아는 사람은 누구나 볼 수 있으니 파트너에게만 보내 주세요.' }),
+          h('h3', { text: '👨‍👩‍👦 남편에게 캘린더 공유' }),
+          h('p', { class: 'muted', text: '닉네임과 생리 기간만 공유돼요. 관계일·임테기·체크 기록은 공유되지 않아요. 링크를 아는 사람은 누구나 볼 수 있으니 남편에게만 보내 주세요.' }),
           h('button', { class: 'btn secondary', type: 'button', id: 'share-copy', text: '🔗 공유 링크 보내기', onclick: shareCalendar }),
           h('button', { class: 'btn', type: 'button', text: '💬 카카오톡으로 톡 보내기', onclick: function () {
             toast('카카오톡 연동은 준비 중이에요');
@@ -1361,7 +1361,7 @@
 
     if (plan && !preg) { var cv = curveBlock(plan, day); if (cv) el.appendChild(cv); }
 
-    // 기록(records) 위젯이 체크리스트(checklist)보다 먼저. 파트너 공유 화면(읽기 전용)에서는 둘 다 숨김
+    // 기록(records) 위젯이 체크리스트(checklist)보다 먼저. 남편 공유 화면(읽기 전용)에서는 둘 다 숨김
     if (!viewOnly) {
       el.appendChild(recordsBlock(iso, ''));
       el.appendChild(checklistBlock(iso, ''));
@@ -1381,7 +1381,7 @@
       h('div', { class: 'weekdays', 'aria-hidden': 'true' }, C.WEEKDAYS.map(function (w) { return h('span', { text: w }); })),
       calendar(plan), legend());
 
-    // 파트너(남편) 공유 화면: 읽기 전용
+    // 남편(남편) 공유 화면: 읽기 전용
     if (viewOnly) return h('main', { class: 'screen' }, shareHeader(), shareDueBanner(plan), calCard, panel(plan));
 
     return h('main', { class: 'screen' },
@@ -1401,7 +1401,7 @@
     ui.selected = C.dayToISO(td); ui.month = { y: p.y, m: p.m };
   }
 
-  /* =============== 파트너(남편) 공유 화면 =============== */
+  /* =============== 남편(남편) 공유 화면 =============== */
   // 타이틀: [닉네임님]과 [남편님]의 임신 준비 캘린더 (26/11/04 버전)  — 이름은 색 구분, 버전은 공유한 날짜
   function shareHeader() {
     return h('div', { class: 'share-head' },
@@ -1545,7 +1545,7 @@
   document.addEventListener('visibilitychange', function () { if (!document.hidden && !sheetEl) render(); });
   initUi();
   render({ focusTitle: false });
-  // 파트너 공유 화면: 공유된 캘린더의 다음 생리 예정일이 되면 업데이트 요청 팝업
+  // 남편 공유 화면: 공유된 캘린더의 다음 생리 예정일이 되면 업데이트 요청 팝업
   if (viewOnly) { if (shareDue(getPlan())) showShareDuePopup(); }
   else maybeShowPopup();
 })();
