@@ -1061,10 +1061,7 @@ function initUi() {
         h('div', { class: 'card' },
           h('h3', { text: '👨‍👩‍👦 남편에게 캘린더 공유' }),
           h('p', { class: 'muted', text: '닉네임과 생리기간, 가임기, 배린일이 공유돼요!. 링크를 아는 사람은 누구나 볼 수 있으니 남편에게만 보내주세요.' }),
-          h('button', { class: 'btn secondary', type: 'button', id: 'share-copy', text: '🔗 공유 링크 보내기', onclick: shareCalendar }),
-          //h('button', { class: 'btn', type: 'button', text: '💬 카카오톡으로 톡 보내기', onclick: function () {
-            toast('카카오톡 연동은 준비 중이에요');
-          } })
+          h('button', { class: 'btn secondary', type: 'button', id: 'share-copy', text: '🔗 공유 링크 보내기', onclick: shareCalendar })
         ),
 
         // GA 추적 코드가 포함된 데이터 전체 삭제 버튼
@@ -1430,12 +1427,10 @@ function homeScreen() {
     openModal({
       title: '👨‍👩‍👦 남편에게 캘린더 공유',
       body: h('div', null,
-        h('p', { class: 'muted', text: '닉네임과 생리기간, 가임기, 배린일이 공유돼요!. 링크를 아는 사람은 누구나 볼 수 있으니 남편에게만 보내주세요.' }),
+        h('p', { class: 'muted', text: '닉네임과 생리기간, 가임기, 배일이 공유돼요!. 링크를 아는 사람은 누구나 볼 수 있으니 남편에게만 보내주세요.' }),
         h('button', { class: 'btn secondary', type: 'button', text: '🔗 공유 링크 보내기', onclick: shareCalendar }),
-        //h('button', { class: 'btn', type: 'button', text: '💬 카카오톡으로 톡 보내기', onclick: function () { toast('카카오톡 연동은 준비 중이에요'); } })
-      ),
       actions: [{ label: '닫기', kind: 'ghost', id: 'share-modal-close' }]
-    });
+}); //
   }
   function initToday() {
     var td = todayDay(), p = C.dayToParts(td);
