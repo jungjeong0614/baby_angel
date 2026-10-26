@@ -1,502 +1,3 @@
-/* core.js — 임신 준비 캘린더: 계산·검증·상태 정제 (순수 함수, DOM/네트워크/저장소 접근 없음)
- *
- * 날짜는 "에포크 일수(정수)"로 다룬다. 타임존·서머타임 영향 없이 일 단위 연산만 수행한다. (NFR-12)
- * 사용자 입력/저장소에서 읽은 값은 sanitizeState()를 거쳐 allowlist로 검증한다. (SEC-09, SEC-12)
- */
-(function (root, factory) {
-  if (typeof module === 'object' && module.exports) module.exports = factory();
-  else root.PPCore = factory();
-})(typeof self !== 'undefined' ? self : this, function () {
-  'use strict';
-
-  var MS_DAY = 86400000;
-  var LUTEAL = 14; // 황체기 14일 고정 (O-2)
-  var ISO_RE = /^\d{4}-\d{2}-\d{2}$/;
-  var ID_RE = /^[A-Za-z0-9_-]{1,40}$/;
-  var DISMISS_RE = /^[a-z0-9-]{1,30}:\d{1,6}$/;
-  var BAD_KEYS = { '__proto__': 1, 'constructor': 1, 'prototype': 1 };
-  var NAME_MAX = 20;
-  var NICK_MAX = 10;
-  var CUSTOM_MAX = 20;
-  var RETENTION_DAYS = 730; // 기록 보존 24개월 (O-10)
-  var STATE_VERSION = 1;
-
-  // 배란일(D0) 기준 상대일 → 임신 가능성 단계 (4=가장 높음 … 1=낮음)
-  var FERTILE_LEVELS = { '-5': 2, '-4': 3, '-3': 3, '-2': 4, '-1': 4, '0': 4, '1': 1 };
-  var LEVEL_LABEL = { 4: '가장 높음', 3: '높음', 2: '보통', 1: '낮음' };
-  var WEEKDAYS = ['일', '월', '화', '수', '목', '금', '토'];
-
-  var TEMPLATES = [
-    { id: 'tpl_folic', name: '엽산', group: '영양제' },
-    { id: 'tpl_vitd', name: '비타민D', group: '영양제' },
-    { id: 'tpl_probiotic', name: '유산균', group: '영양제' },
-    { id: 'tpl_omega3', name: '오메가3', group: '영양제' },
-    { id: 'tpl_coq10', name: '코큐텐', group: '영양제' },
-    { id: 'tpl_noalc', name: '금주', group: '생활' },
-    { id: 'tpl_nosmoke', name: '금연', group: '생활' }
-  ];
-
-  /* ---------------- 날짜 유틸 ---------------- */
-  function pad2(n) { return n < 10 ? '0' + n : '' + n; }
-
-  function isoToDay(iso) {
-    if (typeof iso !== 'string' || !ISO_RE.test(iso)) return null;
-    var y = +iso.slice(0, 4), m = +iso.slice(5, 7), d = +iso.slice(8, 10);
-    if (y < 2000 || y > 2100) return null;
-    var t = Date.UTC(y, m - 1, d);
-    var dt = new Date(t);
-    if (dt.getUTCFullYear() !== y || dt.getUTCMonth() !== m - 1 || dt.getUTCDate() !== d) return null;
-    return Math.round(t / MS_DAY);
-  }
-  function dayToParts(n) {
-    var dt = new Date(n * MS_DAY);
-    return { y: dt.getUTCFullYear(), m: dt.getUTCMonth() + 1, d: dt.getUTCDate() };
-  }
-  function dayToISO(n) {
-    var p = dayToParts(n);
-    return p.y + '-' + pad2(p.m) + '-' + pad2(p.d);
-  }
-  function weekday(n) { return (((n % 7) + 7) + 4) % 7; } // 0=일
-  function daysInMonth(y, m) { return new Date(Date.UTC(y, m, 0)).getUTCDate(); }
-  function todayDayFromDate(dt) { return Math.round(Date.UTC(dt.getFullYear(), dt.getMonth(), dt.getDate()) / MS_DAY); }
-  function mdLabel(n) { var p = dayToParts(n); return p.m + '월 ' + p.d + '일'; }
-  function mdShort(n) { var p = dayToParts(n); return p.m + '/' + p.d; }
-  function fullLabel(n) { return mdLabel(n) + ' ' + WEEKDAYS[weekday(n)] + '요일'; }
-  function mdShortWd(n) { return mdShort(n) + '(' + WEEKDAYS[weekday(n)] + ')'; }   // 10/8(목)
-  function dayWd(n) { return dayToParts(n).d + '(' + WEEKDAYS[weekday(n)] + ')'; }   // 8(목)
-
-  /* ---------------- 생리 시작일 검증 / 주기 ---------------- */
-  // list: 오래된 날짜 → 최근 날짜 순 ISO 문자열 (2~3개)
-  function validateStarts(list, todayDay) {
-    var res = { ok: false, errors: [], warnings: [], days: [], intervals: [], cycleLen: null, irregular: false };
-    if (!Array.isArray(list) || list.length < 2) { res.errors.push('생리 시작일을 모두 입력해 주세요.'); return res; }
-    var days = [], i;
-    for (i = 0; i < list.length; i++) {
-      var d = isoToDay(list[i]);
-      if (d === null) { res.errors.push('날짜를 올바르게 입력해 주세요.'); return res; }
-      if (d > todayDay) { res.errors.push('오늘 이후 날짜는 입력할 수 없어요.'); return res; }
-      days.push(d);
-    }
-    for (i = 1; i < days.length; i++) {
-      if (days[i] <= days[i - 1]) { res.errors.push('생리 시작일은 앞선 날짜보다 나중이어야 해요.'); return res; }
-      var iv = days[i] - days[i - 1];
-      if (iv < 15) { res.errors.push('두 날짜의 간격이 15일보다 짧아요. 날짜를 다시 확인해 주세요.'); return res; }
-      if (iv > 90) { res.errors.push('두 날짜의 간격이 90일보다 길어요. 날짜를 다시 확인해 주세요.'); return res; }
-      res.intervals.push(iv);
-    }
-    res.days = days;
-    res.cycleLen = cycleLength(days);
-    var outOfRange = res.intervals.some(function (v) { return v < 21 || v > 35; });
-    if (outOfRange) res.warnings.push('주기가 일반적인 범위(21~35일)를 벗어나 예측이 정확하지 않을 수 있어요.');
-    if (isIrregular(res.intervals)) res.warnings.push('주기가 불규칙해요. 가임기를 넓게 표시해요.');
-    res.irregular = isIrregular(res.intervals);
-    res.ok = true;
-    return res;
-  }
-  // list: [{ start:'YYYY-MM-DD', end:'YYYY-MM-DD' | '' }] 오래된 → 최근 순. 종료일은 선택 입력
-  function validatePeriods(list, todayDay) {
-    var res = validateStarts(list.map(function (p) { return p.start; }), todayDay);
-    res.lens = []; res.periodLen = null;
-    if (!res.ok) return res;
-    var fail = function (msg) { res.ok = false; res.errors.push(msg); return res; };
-    for (var i = 0; i < list.length; i++) {
-      var raw = list[i].end;
-      if (!raw) continue;
-      var s0 = res.days[i], e = isoToDay(raw);
-      if (e === null) return fail('종료일을 올바르게 입력해 주세요.');
-      if (e > todayDay) return fail('오늘 이후 날짜는 입력할 수 없어요.');
-      if (e < s0) return fail('종료일은 시작일과 같거나 그 이후여야 해요.');
-      if (e - s0 + 1 > 14) return fail('생리 기간이 14일보다 길어요. 날짜를 다시 확인해 주세요.');
-      if (i + 1 < res.days.length && e >= res.days[i + 1]) return fail('종료일은 다음 생리 시작일보다 앞이어야 해요.');
-      res.lens.push(e - s0 + 1);
-    }
-    if (res.lens.length) {
-      var sum = 0; res.lens.forEach(function (v) { sum += v; });
-      res.periodLen = Math.round(sum / res.lens.length);
-      if (res.lens.some(function (v) { return v < 2 || v > 8; })) res.warnings.push('생리 기간이 일반적인 범위(2~8일)를 벗어났어요.');
-    }
-    return res;
-  }
-  function intervalsOf(days) {
-    var out = [];
-    for (var i = 1; i < days.length; i++) out.push(days[i] - days[i - 1]);
-    return out;
-  }
-  function isIrregular(intervals) {
-    if (intervals.length < 2) return false;
-    return Math.max.apply(null, intervals) - Math.min.apply(null, intervals) >= 7;
-  }
-  // 최근 최대 2개 주기의 평균(반올림)
-  function cycleLength(days) {
-    var iv = intervalsOf(days).slice(-2);
-    var sum = 0;
-    for (var i = 0; i < iv.length; i++) sum += iv[i];
-    return Math.round(sum / iv.length);
-  }
-
-  /* ---------------- 예측 계획 ---------------- */
-  function makeCycle(periodDay, predicted) {
-    var o = periodDay - LUTEAL;
-    return {
-      periodDay: periodDay, predicted: predicted, ovulation: o,
-      fertileStart: o - 5, fertileEnd: o + 1,
-      earlyStart: o + 8, earlyRecommend: o + 10, earlyEnd: o + 13
-    };
-  }
-  // days: 실제 생리 시작일(오름차순, 2개 이상)
-  // ends: days와 같은 길이의 종료일(에포크 일수) 배열. 없으면 null
-  function buildPlan(days, ends, horizon) {
-    horizon = horizon || 12;
-    var cycleLen = cycleLength(days);
-    var irregular = isIrregular(intervalsOf(days));
-    var actual = days.map(function (d, i) { return { start: d, end: ends && ends[i] != null ? ends[i] : null }; });
-    var lens = actual.filter(function (a) { return a.end !== null; }).map(function (a) { return a.end - a.start + 1; });
-    var lsum = 0; lens.forEach(function (v) { lsum += v; });
-    var periodLen = lens.length ? Math.round(lsum / lens.length) : 5;   // 종료일을 모르면 5일로 가정
-    var starts = days.map(function (d) { return { day: d, predicted: false }; });
-    var last = days[days.length - 1], k;
-    for (k = 1; k <= horizon; k++) starts.push({ day: last + k * cycleLen, predicted: true });
-    var cycles = [];
-    for (k = 1; k < starts.length; k++) cycles.push(makeCycle(starts[k].day, starts[k].predicted));
-    return { cycleLen: cycleLen, irregular: irregular, starts: starts, cycles: cycles, lastStart: last, nextPeriod: last + cycleLen, actual: actual, periodLen: periodLen, periodLenKnown: lens.length > 0 };
-  }
-
-  // 한 날짜의 캘린더 표시 정보
-  function dayInfo(plan, day) {
-    var info = { level: 0, isOvulation: false, early: null, period: null, uncertain: false, offset: null, cycle: null };
-    var i, ps = null;
-    for (i = 0; i < plan.starts.length; i++) if (plan.starts[i].day === day) { ps = plan.starts[i]; break; }
-    if (ps) info.period = ps.predicted ? 'predicted' : 'actual';
-    info.bleed = null; info.bleedDay = 0;
-    var act = plan.actual || [], a;
-    for (i = 0; i < act.length; i++) {
-      a = act[i];
-      if (day >= a.start && day <= (a.end !== null ? a.end : a.start)) { info.bleed = 'actual'; info.bleedDay = day - a.start + 1; break; }
-    }
-    if (!info.bleed) {
-      for (i = 0; i < plan.starts.length; i++) {
-        if (plan.starts[i].predicted && day >= plan.starts[i].day && day <= plan.starts[i].day + plan.periodLen - 1) { info.bleed = 'predicted'; break; }
-      }
-    }
-    var best = null, bestRank = -1;
-    for (i = 0; i < plan.cycles.length; i++) {
-      var c = plan.cycles[i], off = day - c.ovulation;
-      if (off < -8 || off > 14) continue;
-      var level = FERTILE_LEVELS[String(off)] || 0;
-      var early = off >= 10 && off <= 13 ? 'rec' : (off >= 8 && off <= 9 ? 'low' : null);
-      var uncertain = plan.irregular && !level && ((off >= -8 && off <= -6) || (off >= 2 && off <= 4));
-      var rank = level ? 10 + level : (early ? 5 : (uncertain ? 1 : 0));
-      if (rank > bestRank) { bestRank = rank; best = { level: level, early: early, uncertain: uncertain, offset: off, cycle: c }; }
-    }
-    if (best && bestRank > 0) {
-      info.level = best.level; info.early = best.early; info.uncertain = best.uncertain;
-      info.offset = best.offset; info.cycle = best.cycle; info.isOvulation = best.offset === 0;
-    }
-    return info;
-  }
-
-  // 날짜 이후 가장 가까운 가임기 주기
-  function nextFertileCycle(plan, day) {
-    for (var i = 0; i < plan.cycles.length; i++) if (plan.cycles[i].fertileEnd >= day) return plan.cycles[i];
-    return null;
-  }
-  function curve(cycle) {
-    var out = [];
-    for (var off = -5; off <= 1; off++) out.push({ day: cycle.ovulation + off, offset: off, level: FERTILE_LEVELS[String(off)] });
-    return out;
-  }
-
-  // 단계 연동 안내 카드 (FR-70)
-  function guidance(plan, day, todayDay) {
-    if (day < plan.starts[0].day) return null;
-    var i, startHit = null;
-    for (i = 0; i < plan.starts.length; i++) if (plan.starts[i].day === day && !plan.starts[i].predicted) startHit = plan.starts[i];
-    var ctx = null, first = null;
-    for (i = 0; i < plan.cycles.length; i++) if (plan.cycles[i].predicted) { first = plan.cycles[i]; break; }
-    var late = 0, c = null;
-    if (first && day > first.periodDay && day <= todayDay) { c = first; late = day - first.periodDay; }
-    else {
-      for (i = 0; i < plan.cycles.length; i++) if (day <= plan.cycles[i].periodDay) { c = plan.cycles[i]; break; }
-    }
-    var act2 = plan.actual || [];
-    for (i = 0; i < act2.length; i++) {
-      if (act2[i].end !== null && day > act2[i].start && day <= act2[i].end) {
-        return { id: 'period-day', key: 'period-day:' + act2[i].start, tone: 'info', title: '생리 ' + (day - act2[i].start + 1) + '일째예요', body: '이번 생리는 ' + (act2[i].end - act2[i].start + 1) + '일간 이어졌어요. 가임기는 생리가 끝난 뒤에 시작돼요.' };
-      }
-    }
-    if (startHit) {
-      return { id: 'period-start', key: 'period-start:' + day, tone: 'info', title: '생리 시작일이에요', body: '이날부터 새 주기가 시작돼요. 가임기와 검사 시기는 새 주기를 기준으로 다시 계산돼요.' };
-    }
-    if (!c) return null;
-    var off = day - c.ovulation, key = function (id) { return id + ':' + c.periodDay; };
-    if (late > 0) {
-      if (late >= 7) return { id: 'late7', key: key('late7'), tone: 'care', title: '예정일보다 ' + late + '일 늦어요', body: '임테기로 확인해 보고, 결과와 관계없이 늦어지는 경우엔 병원 상담을 고려해 보세요.' };
-      return { id: 'late', key: key('late'), tone: 'notice', title: '예정일이 ' + late + '일 지났어요', body: '지금 검사하면 더 정확해요. 생리가 시작되면 \'생리 시작\'을 기록해 주세요.' };
-    }
-    if (off < -5) return { id: 'before', key: key('before'), tone: 'info', title: '가임기 시작 ' + (-5 - off) + '일 전', body: '가임기는 ' + mdLabel(c.fertileStart) + '부터 ' + mdLabel(c.fertileEnd) + '까지예요.' };
-    if (off === -5) return { id: 'fert-start', key: key('fert-start'), tone: 'peak', title: '가임기 시작일이에요', body: '배란 예정일(' + mdLabel(c.ovulation) + ')까지 5일 남았어요. 이날은 임신 가능성이 \'보통\' 단계예요.' };
-    if (off === -4 || off === -3) return { id: 'fert-high', key: key('fert-high'), tone: 'peak', title: '임신 가능성 높음', body: '배란 예정일(' + mdLabel(c.ovulation) + ')까지 ' + (-off) + '일 남았어요.' };
-    if (off === -2 || off === -1) return { id: 'fert-peak', key: key('fert-peak'), tone: 'peak', title: '임신 가능성 가장 높음', body: '배란 예정일(' + mdLabel(c.ovulation) + ')까지 ' + (-off) + '일 남았어요.' };
-    if (off === 0) return { id: 'ovul', key: key('ovul'), tone: 'peak', title: '배란 예정일이에요', body: '배란 예정일 전후 3일이 가장 가능성이 높은 시기예요.' };
-    if (off === 1) return { id: 'fert-last', key: key('fert-last'), tone: 'info', title: '가임기 마지막 날이에요', body: '이날이 지나면 임신 가능성이 크게 낮아져요.' };
-    if (off >= 2 && off <= 7) return { id: 'luteal', key: key('luteal'), tone: 'info', title: '얼리테스트 ' + (8 - off) + '일 전', body: '배란 후 8일(' + mdLabel(c.earlyStart) + ')부터 해볼 수 있어요. 10일 이후(' + mdLabel(c.earlyRecommend) + ')가 더 믿을 만해요.' };
-    if (off === 8 || off === 9) return { id: 'early-low', key: key('early-low'), tone: 'notice', title: '얼리 임테기 가능 시기', body: '아직 정확도가 낮아서 음성이어도 알 수 없어요. ' + mdLabel(c.earlyRecommend) + ' 이후가 더 믿을 만해요.' };
-    if (off >= 10 && off <= 13) return { id: 'early', key: key('early'), tone: 'notice', title: '얼리 임테기 권장 시기', body: '음성이면 며칠 뒤 다시 검사해 보세요. 생리 예정일은 ' + mdLabel(c.periodDay) + '이에요.' };
-    if (off >= 14) {
-      if (!c.predicted) return null;
-      return { id: 'period-due', key: key('period-due'), tone: 'notice', title: '생리 예정일이에요', body: '지금부터 정확한 검사가 가능해요. 생리가 시작되면 \'생리 시작\'을 기록해 주세요.' };
-    }
-    return null;
-  }
-
-  // 한 줄 상태 텍스트
-  function statusText(info) {
-    var parts = [];
-    if (info.period === 'actual') parts.push('생리 시작일');
-    else if (info.period === 'predicted') parts.push('생리 예정일 · 정확한 검사 가능');
-    if (info.bleed === 'actual' && info.period !== 'actual') parts.push('생리 ' + info.bleedDay + '일째');
-    else if (info.bleed === 'predicted' && info.period !== 'predicted') parts.push('생리 예정 기간');
-    if (info.isOvulation) parts.push('배란 예정일');
-    if (info.level) parts.push('가임기 ' + LEVEL_LABEL[info.level]);
-    if (info.early === 'rec') parts.push('얼리 임테기 권장');
-    else if (info.early === 'low') parts.push('얼리 임테기 가능(정확도 낮음)');
-    if (info.uncertain && !parts.length) parts.push('주기가 불규칙해 가임기가 이 근처일 수 있어요');
-    return parts.join(' · ');
-  }
-
-  /* ---------------- 생리 시작 기록 (FR-62) ---------------- */
-  function canAddPeriodStart(startsIso, iso, todayDay) {
-    var d = isoToDay(iso);
-    if (d === null) return { ok: false, error: '날짜를 올바르게 입력해 주세요.' };
-    if (d > todayDay) return { ok: false, error: '아직 오지 않은 날짜는 기록할 수 없어요.' };
-    var days = startsIso.map(isoToDay);
-    var last = days[days.length - 1];
-    if (d === last) return { ok: false, error: '이미 생리 시작일로 기록돼 있어요.' };
-    if (d < last) return { ok: false, error: '가장 마지막 생리 시작일(' + mdLabel(last) + ') 이후 날짜만 기록할 수 있어요.' };
-    var iv = d - last;
-    if (iv < 15) return { ok: false, error: '이전 생리 시작일과 간격이 15일보다 짧아요. 날짜를 확인해 주세요.' };
-    if (iv > 90) return { ok: false, error: '이전 생리 시작일과 간격이 90일보다 길어요. 날짜를 확인해 주세요.' };
-    return { ok: true, interval: iv, warning: (iv < 21 || iv > 35) ? '주기가 일반적인 범위(21~35일)를 벗어났어요.' : null };
-  }
-  // 이날을 "생리 종료일"로 기록할 수 있는지: 이날 이전의 가장 가까운 생리 시작일에 붙인다
-  function canSetPeriodEnd(startsIso, iso, todayDay) {
-    var d = isoToDay(iso);
-    if (d === null) return { ok: false, error: '날짜를 올바르게 입력해 주세요.' };
-    if (d > todayDay) return { ok: false, error: '아직 오지 않은 날짜는 기록할 수 없어요.' };
-    var days = startsIso.map(isoToDay), s = null, i;
-    for (i = 0; i < days.length; i++) if (days[i] <= d) s = days[i];
-    if (s === null) return { ok: false, error: '생리 시작일 이후 날짜만 종료일로 기록할 수 있어요.' };
-    var len = d - s + 1;
-    if (len > 14) return { ok: false, error: '생리 시작일(' + mdLabel(s) + ')에서 14일이 넘었어요. 날짜를 확인해 주세요.' };
-    return { ok: true, start: dayToISO(s), len: len, warning: (len < 2 || len > 8) ? '생리 기간이 일반적인 범위(2~8일)를 벗어났어요.' : null };
-  }
-  // 가장 최근 3개만 유지 (가장 오래된 값을 밀어냄)
-  function addPeriodStart(startsIso, iso) {
-    return startsIso.concat([iso]).slice(-3);
-  }
-
-  /* ---------------- 체크 항목 ---------------- */
-  function cleanName(s) {
-    if (typeof s !== 'string') return '';
-    s = s.replace(/[\u0000-\u001F\u007F-\u009F\u2028\u2029\u200B-\u200F\u202A-\u202E\u2066-\u2069]/g, '').replace(/\s+/g, ' ').trim();
-    var chars = Array.from(s);
-    return chars.length > NAME_MAX ? chars.slice(0, NAME_MAX).join('').trim() : s;
-  }
-  // 닉네임: 제어문자·방향 제어문자 제거, 공백 정리, 최대 NICK_MAX자
-  function cleanNick(s) {
-    if (typeof s !== 'string') return '';
-    s = s.replace(/[\u0000-\u001F\u007F-\u009F\u2028\u2029\u200B-\u200F\u202A-\u202E\u2066-\u2069]/g, '').replace(/\s+/g, ' ').trim();
-    var chars = Array.from(s);
-    return chars.length > NICK_MAX ? chars.slice(0, NICK_MAX).join('').trim() : s;
-  }
-  function itemActiveOn(item, iso, hasCheck) {
-    if (hasCheck) return true;
-    if (item.deleted) return false;
-    if (!item.from) return false;
-    if (item.from > iso) return false;
-    if (item.to && iso >= item.to) return false;
-    return true;
-  }
-  // 우선순위: prio가 작을수록 위. 같으면 배열 순서. 체크 화면·관리 화면 모두 이 순서를 따른다.
-  function byPrio(items) {
-    return items.map(function (it, i) { return { it: it, i: i }; })
-      .sort(function (a, b) { return (a.it.prio - b.it.prio) || (a.i - b.i); })
-      .map(function (x) { return x.it; });
-  }
-  function rankedItems(items) { return byPrio(items).filter(function (it) { return it.enabled && !it.deleted; }); }
-  function nextPrio(items) { return items.reduce(function (m, it) { return Math.max(m, it.prio); }, -1) + 1; }
-  function normalizePrio(items) { byPrio(items).forEach(function (it, k) { it.prio = k; }); }
-  // 켜 둔 항목들 사이에서 위(-1)/아래(+1)로 한 칸 이동. 이동했으면 true
-  function movePrio(items, id, dir) {
-    normalizePrio(items);
-    var list = rankedItems(items), idx = -1, i;
-    for (i = 0; i < list.length; i++) if (list[i].id === id) idx = i;
-    var j = idx + dir;
-    if (idx < 0 || j < 0 || j >= list.length) return false;
-    var t = list[idx].prio; list[idx].prio = list[j].prio; list[j].prio = t;
-    return true;
-  }
-  function itemsForDate(state, iso) {
-    var checks = state.checks[iso] || {};
-    return byPrio(state.items).filter(function (it) { return itemActiveOn(it, iso, !!checks[it.id]); });
-  }
-  function completion(state, iso) {
-    var list = itemsForDate(state, iso), checks = state.checks[iso] || {}, done = 0;
-    list.forEach(function (it) { if (checks[it.id]) done++; });
-    return { total: list.length, done: done };
-  }
-
-  /* ---------------- 상태 생성 / 정제 ---------------- */
-  function newMap() { return Object.create(null); }
-  function freshState() {
-    return {
-      v: STATE_VERSION, consent: false, nick: '', popupHide: '', starts: [], ends: newMap(),
-      items: TEMPLATES.map(function (t, i) { return { id: t.id, name: t.name, group: t.group, tpl: true, enabled: false, from: null, to: null, deleted: false, prio: i }; }),
-      checks: newMap(), records: newMap(),
-      settings: { sex: true, sexMark: true, pregnancy: false },
-      dismissed: newMap()
-    };
-  }
-  function validKey(k) { return typeof k === 'string' && !BAD_KEYS[k]; }
-
-  // 저장소/외부에서 온 값을 allowlist 기반으로 정제 (오염·변조 데이터 방어)
-  function sanitizeState(raw, todayDay) {
-    var st = freshState();
-    if (!raw || typeof raw !== 'object' || Array.isArray(raw)) return st;
-    var minDay = todayDay - RETENTION_DAYS;
-    var i, k;
-
-    st.consent = raw.consent === true;
-    st.nick = cleanNick(raw.nick);
-
-    if (Array.isArray(raw.starts)) {
-      var seen = [];
-      raw.starts.slice(0, 10).forEach(function (s) { var d = isoToDay(s); if (d !== null && d <= todayDay) seen.push(d); });
-      seen = seen.filter(function (d, idx) { return seen.indexOf(d) === idx; }).sort(function (a, b) { return a - b; });
-      var ok = [];
-      seen.forEach(function (d) {
-        if (!ok.length) ok.push(d);
-        else { var iv = d - ok[ok.length - 1]; if (iv >= 15 && iv <= 90) ok.push(d); }
-      });
-      st.starts = ok.slice(-3).map(dayToISO);
-      if (st.starts.length < 2) st.starts = [];
-    }
-
-    if (raw.ends && typeof raw.ends === 'object' && !Array.isArray(raw.ends) && st.starts.length) {
-      var sd = st.starts.map(isoToDay);
-      st.starts.forEach(function (sIso, idx) {
-        if (!Object.prototype.hasOwnProperty.call(raw.ends, sIso)) return;
-        var eIso = raw.ends[sIso], ed = isoToDay(eIso);
-        if (ed === null || ed > todayDay || ed < sd[idx] || ed - sd[idx] + 1 > 14) return;
-        if (idx + 1 < sd.length && ed >= sd[idx + 1]) return;
-        st.ends[sIso] = eIso;
-      });
-    }
-
-    if (Array.isArray(raw.items)) {
-      var tplMap = {};
-      TEMPLATES.forEach(function (t) { tplMap[t.id] = true; });
-      var customs = [], customNames = {};
-      raw.items.slice(0, 60).forEach(function (it) {
-        if (!it || typeof it !== 'object' || typeof it.id !== 'string' || !ID_RE.test(it.id) || BAD_KEYS[it.id]) return;
-        var from = isoToDay(it.from) !== null ? it.from : null;
-        var to = isoToDay(it.to) !== null ? it.to : null;
-        if (tplMap[it.id]) {
-          var tpl = st.items.filter(function (x) { return x.id === it.id; })[0];
-          tpl.enabled = it.enabled === true; tpl.from = from; tpl.to = to;
-          if (Number.isInteger(it.prio) && it.prio >= 0 && it.prio < 10000) tpl.prio = it.prio;
-          if (tpl.enabled) tpl.to = null;
-        } else if (it.id.indexOf('c_') === 0 && customs.length < CUSTOM_MAX + 20) {
-          var name = cleanName(it.name);
-          if (!name) return;
-          if (customs.some(function (x) { return x.id === it.id; })) return;
-          var deleted = it.deleted === true;
-          if (!deleted) { var low = name.toLowerCase(); if (customNames[low]) return; customNames[low] = true; }
-          customs.push({ id: it.id, name: name, group: '직접 추가', tpl: false, enabled: it.enabled === true && !deleted, from: from, to: to, deleted: deleted,
-            prio: (Number.isInteger(it.prio) && it.prio >= 0 && it.prio < 10000) ? it.prio : 100 + customs.length });
-        }
-      });
-      st.items = st.items.concat(customs);
-    }
-
-    var itemIds = {};
-    st.items.forEach(function (it) { itemIds[it.id] = true; });
-
-    if (raw.checks && typeof raw.checks === 'object') {
-      Object.keys(raw.checks).slice(0, 2000).forEach(function (iso) {
-        var d = isoToDay(iso);
-        if (d === null || d > todayDay || d < minDay || !validKey(iso)) return;
-        var src = raw.checks[iso];
-        if (!src || typeof src !== 'object') return;
-        var m = newMap(), n = 0;
-        Object.keys(src).forEach(function (id) { if (validKey(id) && itemIds[id] && src[id] === true) { m[id] = true; n++; } });
-        if (n) st.checks[iso] = m;
-      });
-    }
-
-    if (raw.records && typeof raw.records === 'object') {
-      Object.keys(raw.records).slice(0, 2000).forEach(function (iso) {
-        var d = isoToDay(iso);
-        if (d === null || d > todayDay || d < minDay || !validKey(iso)) return;
-        var r = raw.records[iso];
-        if (!r || typeof r !== 'object') return;
-        var rec = {};
-        if (r.sex === true) rec.sex = true;
-        if (r.test === 'neg' || r.test === 'pos' || r.test === 'faint') rec.test = r.test;
-        if (rec.sex || rec.test) st.records[iso] = rec;
-      });
-    }
-
-    if (raw.settings && typeof raw.settings === 'object') {
-      st.settings.sex = raw.settings.sex !== false;   // 명시적으로 끈 경우에만 꺼짐
-      st.settings.pregnancy = raw.settings.pregnancy === true;
-      st.settings.sexMark = raw.settings.sexMark !== false;   // 명시적으로 끈 경우에만 ♥ 대신 중립 점
-    }
-
-    // 오늘의 체크 팝업을 숨기는 마지막 날짜. 오늘+6일보다 먼 값은 변조로 보고 무시
-    if (typeof raw.popupHide === 'string') {
-      var pdd = isoToDay(raw.popupHide);
-      if (pdd !== null && pdd <= todayDay) st.popupHide = raw.popupHide;
-    }
-
-    if (raw.dismissed && typeof raw.dismissed === 'object') {
-      var n2 = 0;
-      Object.keys(raw.dismissed).forEach(function (key) {
-        if (n2 < 200 && validKey(key) && DISMISS_RE.test(key) && raw.dismissed[key] === true) { st.dismissed[key] = true; n2++; }
-      });
-    }
-    return st;
-  }
-
-  /* ---------------- 남편 공유 링크 ---------------- */
-  // 링크로 들어온 외부 값을 allowlist로 검증한다. 하나라도 어긋나면 null (fail-closed)
-  function sanitizeShare(raw, todayDay) {
-    if (!raw || typeof raw !== 'object' || Array.isArray(raw) || raw.v !== 1) return null;
-    var nick = cleanNick(raw.n);
-    var sd = typeof raw.d === 'string' ? isoToDay(raw.d) : null;
-    if (!nick || sd === null || sd > todayDay + 1) return null;
-    // 기록·체크 항목은 아예 받지 않는다(시작/종료일만 검증해서 사용)
-    var st = sanitizeState({ consent: true, starts: raw.s, ends: raw.e }, todayDay);
-    if (st.starts.length < 2) return null;
-    st.nick = nick;
-    return { state: st, nick: nick, shared: raw.d };
-  }
-  function shareVersionLabel(iso) { return iso.slice(2, 4) + '/' + iso.slice(5, 7) + '/' + iso.slice(8, 10); } // 26/11/04
-
-  return {
-    LUTEAL: LUTEAL, FERTILE_LEVELS: FERTILE_LEVELS, LEVEL_LABEL: LEVEL_LABEL, WEEKDAYS: WEEKDAYS,
-    TEMPLATES: TEMPLATES, NAME_MAX: NAME_MAX, NICK_MAX: NICK_MAX, CUSTOM_MAX: CUSTOM_MAX, RETENTION_DAYS: RETENTION_DAYS,
-    isoToDay: isoToDay, dayToISO: dayToISO, dayToParts: dayToParts, weekday: weekday, daysInMonth: daysInMonth,
-    todayDayFromDate: todayDayFromDate, mdLabel: mdLabel, mdShort: mdShort, mdShortWd: mdShortWd, dayWd: dayWd, fullLabel: fullLabel, pad2: pad2,
-    validateStarts: validateStarts, validatePeriods: validatePeriods, canSetPeriodEnd: canSetPeriodEnd, cycleLength: cycleLength, buildPlan: buildPlan, dayInfo: dayInfo,
-    nextFertileCycle: nextFertileCycle, curve: curve, guidance: guidance, statusText: statusText,
-    canAddPeriodStart: canAddPeriodStart, addPeriodStart: addPeriodStart,
-    cleanName: cleanName, cleanNick: cleanNick, itemActiveOn: itemActiveOn, itemsForDate: itemsForDate, completion: completion,
-    rankedItems: rankedItems, nextPrio: nextPrio, normalizePrio: normalizePrio, movePrio: movePrio,
-    freshState: freshState, sanitizeState: sanitizeState, sanitizeShare: sanitizeShare, shareVersionLabel: shareVersionLabel
-  };
-});
-
 /* app.js — 임신 준비 캘린더 UI
  * 보안 원칙: innerHTML/인라인 핸들러 미사용(모든 텍스트는 textContent), 외부 통신 없음,
  * 건강 정보(날짜·항목명·기록)는 로그/에러 화면에 절대 출력하지 않는다. (SEC-02, SEC-03, SEC-06, SEC-12)
@@ -550,7 +51,7 @@
     return C.sanitizeState(raw, todayDay());
   }
 
-  /* ---- 남편 공유 링크(#s=...) ----
+  /* ---- 파트너 공유 링크(#s=...) ----
    * 데이터는 URL 해시에만 담겨 서버로 전송되지 않는다.
    * 링크로 열린 화면(viewOnly)은 읽기 전용이며 어떤 값도 저장소에 쓰지 않는다. */
   function encodeShare(obj) {
@@ -749,7 +250,7 @@
         h('ul', null,
           h('li', { text: '위 정보는 이 기기 안에만 저장해요. 서버나 분석 도구로 보내지 않아요.' }),
           h('li', { text: '화면 이동·버튼 클릭 같은 이용 통계만 익명으로 수집해요.' }),
-          h('li', { text: '남편 공유 링크를 만들면 닉네임과 생리 시작·종료일이 링크 안에 담겨요. 서버에는 저장되지 않아요.' })),
+          h('li', { text: '파트너 공유 링크를 만들면 닉네임과 생리 시작·종료일이 링크 안에 담겨요. 서버에는 저장되지 않아요.' })),
         h('h3', { text: '보관과 삭제' }),
         h('ul', null, h('li', { text: '기록은 최근 24개월까지 보관하고, 오래된 기록은 자동으로 지워져요.' }), h('li', { text: '설정에서 언제든 모든 정보를 한 번에 삭제할 수 있어요.' })),
         h('h3', { text: '참고용 서비스예요' }),
@@ -832,7 +333,7 @@
       h('p', { class: 'lead', text: '생리를 시작한 날과 끝난 날을 입력해 주세요. 종료일을 모르면 비워 두어도 괜찮아요.' }),
 
       nickField,
-      h('p', { class: 'muted', text: '남편와 캘린더를 공유할 때 \'닉네임님\'으로 보여요.' }),
+      h('p', { class: 'muted', text: '파트너와 캘린더를 공유할 때 \'닉네임님\'으로 보여요.' }),
 
       // 👇 입력 순서: 마지막 생리 -> 이전 생리 -> 그 이전 생리
       group('마지막 생리', 'in-c', 'c', 'in-cE', 'cE'),
@@ -999,7 +500,7 @@
     });
   }
 
-  /* ---- 남편 공유 링크 만들기 ---- */
+  /* ---- 파트너 공유 링크 만들기 ---- */
   function buildShareUrl() {
     // 기록·체크 항목은 담지 않는다: 닉네임, 생리 시작·종료일, 공유한 날짜만
     var payload = { v: 1, n: state.nick, d: todayISO(), s: state.starts, e: state.ends };
@@ -1050,8 +551,8 @@
 
       h('div', { class: 'footer-actions' },
         h('div', { class: 'card' },
-          h('h3', { text: '👨‍👩‍👦 남편에게 캘린더 공유' }),
-          h('p', { class: 'muted', text: '닉네임과 생리 기간만 공유돼요. 관계일·임테기·체크 기록은 공유되지 않아요. 링크를 아는 사람은 누구나 볼 수 있으니 남편에게만 보내 주세요.' }),
+          h('h3', { text: '👨‍👩‍👦 파트너에게 캘린더 공유' }),
+          h('p', { class: 'muted', text: '닉네임과 생리 기간만 공유돼요. 관계일·임테기·체크 기록은 공유되지 않아요. 링크를 아는 사람은 누구나 볼 수 있으니 파트너에게만 보내 주세요.' }),
           h('button', { class: 'btn secondary', type: 'button', id: 'share-copy', text: '🔗 공유 링크 보내기', onclick: shareCalendar }),
           h('button', { class: 'btn', type: 'button', text: '💬 카카오톡으로 톡 보내기', onclick: function () {
             toast('카카오톡 연동은 준비 중이에요');
@@ -1264,23 +765,19 @@
     for (i = 0; i < lead; i++) grid.appendChild(h('div', { class: 'cell-empty', 'aria-hidden': 'true' }));
     for (i = 0; i < dim; i++) {
       var day = first + i, iso = C.dayToISO(day), info = plan && !preg ? C.dayInfo(plan, day) : null;
- // 👇 추가된 부분: 남편 공유 화면일 때 얼리 임테기 정보 삭제
+      
+      // 남편 공유 화면일 때 얼리 임테기 정보 강제 삭제
       if (info && viewOnly) {
         info.early = null; 
       }
 
       var comp = day <= td ? C.completion(state, iso) : { total: 0, done: 0 };
       var isActualStart = state.starts.indexOf(iso) >= 0;
-// ... (아래 기존 코드 유지) ...
-      var comp = day <= td ? C.completion(state, iso) : { total: 0, done: 0 };
-      var isActualStart = state.starts.indexOf(iso) >= 0;
       var rr = state.records[iso];
       var hasRec = !!rr || isActualStart;
 
-      
-
-      // 관계일: 기록 사용 + 표시 설정이 모두 켜져 있으면 ♥
-      var sexMark = !!(rr && rr.sex && state.settings.sex && state.settings.sexMark);
+      // 관계일: 아내 화면(!viewOnly)이면서 설정이 켜져 있을 때만 ♥ 표시
+      var sexMark = !!(rr && rr.sex && state.settings.sex && state.settings.sexMark && !viewOnly);
 
       var cls = 'cell';
       if (info && info.level) cls += ' lv-' + info.level;
@@ -1324,16 +821,16 @@
   }
   function monthLabelText() { return ui.month.y + '년 ' + ui.month.m + '월 달력'; }
 
-function legend() {
+  function legend() {
     if (state.settings.pregnancy) return null;
     var s = function (cls) { return h('i', { class: 'sw ' + cls }); };
     return h('div', { class: 'legend', 'aria-label': '범례', id: 'legend' },
       h('span', null, s('lv3'), '가임기'),
       h('span', null, '◆ 배란일'),
-      // 👇 남편 뷰가 아닐 때만 얼리 임테기 범례 표시
       (!viewOnly ? h('span', null, s('er'), '얼리 임테기') : null),
       h('span', null, s('bd'), '생리 기간'),
       h('span', null, '△ 생리 예정'),
+      (state.settings.sex && state.settings.sexMark && !viewOnly ? h('span', { id: 'legend-sex' }, '♥ 관계일') : null)
     );
   }
 
@@ -1343,13 +840,6 @@ function legend() {
     var info = plan && !preg ? C.dayInfo(plan, day) : null;
     var g = plan && !preg ? C.guidance(plan, day, td) : null;
 
-    // 👇 추가된 부분: 남편 공유 화면일 때 얼리 임테기 텍스트 안내(guidance) 강제 제거
-    if (viewOnly) {
-      if (info) info.early = null;
-      if (g && (g.id === 'luteal' || g.id === 'early-low' || g.id === 'early')) g = null;
-    }
-
-// ... (아래 기존 코드 유지) ...
     var shortText = '';
     if (g) {
       shortText = g.title;
@@ -1379,7 +869,7 @@ function legend() {
 
     if (plan && !preg) { var cv = curveBlock(plan, day); if (cv) el.appendChild(cv); }
 
-    // 기록(records) 위젯이 체크리스트(checklist)보다 먼저. 남편 공유 화면(읽기 전용)에서는 둘 다 숨김
+    // 기록(records) 위젯이 체크리스트(checklist)보다 먼저. 파트너 공유 화면(읽기 전용)에서는 둘 다 숨김
     if (!viewOnly) {
       el.appendChild(recordsBlock(iso, ''));
       el.appendChild(checklistBlock(iso, ''));
@@ -1399,7 +889,7 @@ function legend() {
       h('div', { class: 'weekdays', 'aria-hidden': 'true' }, C.WEEKDAYS.map(function (w) { return h('span', { text: w }); })),
       calendar(plan), legend());
 
-    // 남편(남편) 공유 화면: 읽기 전용
+    // 파트너(남편) 공유 화면: 읽기 전용
     if (viewOnly) return h('main', { class: 'screen' }, shareHeader(), shareDueBanner(plan), calCard, panel(plan));
 
     return h('main', { class: 'screen' },
@@ -1419,8 +909,8 @@ function legend() {
     ui.selected = C.dayToISO(td); ui.month = { y: p.y, m: p.m };
   }
 
-  /* =============== 남편(남편) 공유 화면 =============== */
-  // 타이틀: [닉네임님]♥[남편님]의 임신 준비 캘린더 (26/11/04 버전)  — 이름은 색 구분, 버전은 공유한 날짜
+  /* =============== 파트너(남편) 공유 화면 =============== */
+  // 타이틀: [닉네임님]과 [남편님]의 임신 준비 캘린더 (26/11/04 버전)  — 이름은 색 구분, 버전은 공유한 날짜
   function shareHeader() {
     return h('div', { class: 'share-head' },
       h('h1', { class: 'share-title', 'data-title': '1' },
@@ -1476,13 +966,6 @@ function legend() {
     var f = captureFocus(), sy = sheetEl.scrollTop;
     var td = todayDay(), iso = ui.selected, day = C.isoToDay(iso), preg = state.settings.pregnancy, plan = getPlan();
     var info = plan && !preg ? C.dayInfo(plan, day) : null, g = plan && !preg ? C.guidance(plan, day, td) : null;
-  // 👇 추가된 부분: 시트 안에서도 남편 뷰일 땐 얼리 임테기 문구 제거
-    if (viewOnly) {
-      if (info) info.early = null;
-      if (g && (g.id === 'luteal' || g.id === 'early-low' || g.id === 'early')) g = null;
-    }
-
-  // ... (아래 기존 코드 유지) ...
     var inner = h('div', { class: 'sheet-in' },
       h('div', { class: 'sheet-grab', 'aria-hidden': 'true' }),
       h('div', { class: 'sheet-top' },
@@ -1570,8 +1053,7 @@ function legend() {
   document.addEventListener('visibilitychange', function () { if (!document.hidden && !sheetEl) render(); });
   initUi();
   render({ focusTitle: false });
-  // 남편 공유 화면: 공유된 캘린더의 다음 생리 예정일이 되면 업데이트 요청 팝업
+  // 파트너 공유 화면: 공유된 캘린더의 다음 생리 예정일이 되면 업데이트 요청 팝업
   if (viewOnly) { if (shareDue(getPlan())) showShareDuePopup(); }
   else maybeShowPopup();
 })();
-
