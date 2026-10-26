@@ -161,8 +161,8 @@ button.icon-btn[disabled]:hover { background: transparent; }
 .cell .heart { position: absolute; top: 2px; left: 4px; font-size: 11px; line-height: 1; color: var(--lv4); }
 .cell .dot.second { left: 18px; top: 4px; }
 .cell.lv-4 .heart { color: #fff; }
-.cell .bar { position: absolute; left: 9px; right: 9px; bottom: 6px; height: 4px; border-radius: 4px; background: rgba(25,31,40,.12); overflow: hidden; }
-.cell .bar i { display: block; height: 100%; width: calc(var(--p, 0) * 100%); background: var(--primary); border-radius: 4px; }
+.cell .bar { position: absolute; left: 9px; right: 9px; bottom: 6px; height: 4px !important; min-height: 4px !important; border-radius: 4px; background: rgba(25,31,40,.12); overflow: hidden; }
+.cell .bar i { display: block; height: 100% !important; min-height: 100% !important; width: calc(var(--p, 0) * 100%); background: var(--primary); border-radius: 4px; }
 .cell.is-selected { box-shadow: inset 0 0 0 2px var(--primary); }
 .cell.bleed { background: var(--bleed); }
 .cell.bleed-pred { background: #fff; border: 2px dashed var(--bleed-line); }
