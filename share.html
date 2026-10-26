@@ -1,3 +1,4 @@
+<html lang="ko">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
@@ -12,8 +13,8 @@
 <meta property="og:url" content="https://babyangel-pi.vercel.app/share.html">
 <title>우리 아기 만나기 캘린더 공유용</title>
 
-<!-- 👇 이 부분(스타일시트 링크)을 추가해 주세요! -->
-<link rel="stylesheet" href="./style.css">
+<!-- 👇 상대 경로('./') 대신 절대 경로('/')로 수정 -->
+<link rel="stylesheet" href="/style.css">
 
 <!-- Google tag (gtag.js) -->
 <script async src="https://www.googletagmanager.com/gtag/js?id=G-1WP62Y5F7M"></script>
@@ -24,3 +25,11 @@
   gtag('config', 'G-1WP62Y5F7M', { page_location: location.origin + location.pathname });
 </script>
 </head>
+<body>
+  <!-- 메인 앱이 실행될 수 있도록 기존 index.html과 동일한 루트 구조 유지 -->
+  <div id="app"></div>
+  
+  <!-- 👇 스크립트 경로도 절대 경로('/')로 수정 -->
+  <script src="/app.js"></script>
+</body>
+</html>
