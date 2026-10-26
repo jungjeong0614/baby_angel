@@ -1251,6 +1251,26 @@ function itemsScreen() {
     });
   }
 function settingsScreen() {
+  // 남편 공유하기 UI 섹션
+h('div', { class: 'card', style: 'margin-bottom: 20px;' },
+  h('h3', { text: '👨‍👩‍👦 파트너에게 캘린더 공유' }),
+  h('p', { text: '이번 달 가임기 일정과 내 기록을 남편에게 공유합니다.', style: 'font-size: 14px; color: #666; margin-bottom: 15px;' }),
+  
+  // 1. URL 링크 복사 버튼 (완벽하게 작동함)
+  h('button', { class: 'btn secondary', style: 'margin-bottom: 10px;', type: 'button', text: '🔗 링크 복사하기', onclick: function() {
+    var shareUrl = window.location.href; // 추후 남편 전용 고유 링크(?room=xxx)로 변경될 예정
+    navigator.clipboard.writeText(shareUrl).then(function() {
+      alert('공유 링크가 복사되었습니다! 메신저에서 붙여넣기 해주세요.');
+    }).catch(function() {
+      alert('링크 복사를 지원하지 않는 브라우저입니다.');
+    });
+  } }),
+
+  // 2. 카카오톡 공유 버튼 (현재는 UI 테스트용)
+  h('button', { class: 'btn', style: 'background-color: #FEE500; color: #000; border: none;', type: 'button', text: '💬 카카오톡으로 톡 보내기', onclick: function() {
+    alert('카카오톡 공식 연동(API 키 발급) 세팅 후 활성화할 예정입니다.');
+  } })
+),
     var sums = state.starts.map(function (x) { var a = C.mdLabel(C.isoToDay(x)); return state.ends[x] ? a + '~' + C.mdLabel(C.isoToDay(state.ends[x])) : a; }).join(', ');
     return h('main', { class: 'screen' },
       topBar('설정', function () { go('home'); }),
