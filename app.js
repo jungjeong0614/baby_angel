@@ -998,7 +998,7 @@
       actions: [{ label: '확인', kind: 'secondary', id: 'help-close' }]
     });
   }
-
+  
   /* ---- 남편 공유 링크 만들기 ---- */
   function buildShareUrl() {
     // 기록·체크 항목은 담지 않는다: 닉네임, 생리 시작·종료일, 공유한 날짜만
@@ -1079,6 +1079,19 @@
           ui.addDraft = ''; ui.addError = ''; initUi(); ui.storageLost = Store.mode() === 'memory'; go('consent'); toast('모든 정보를 삭제했어요');
         } },
         { label: '취소', kind: 'ghost', id: 'delete-cancel' }]
+    });
+  }
+
+ /* ===============아내 캘린더 > 남편이랑 공유 =============== */
+  function showShareModal() {
+    openModal({
+      title: '👨‍👩‍👦 남에게 캘린더 공유',
+      body: h('div', null,
+        h('p', { class: 'muted', text: '닉네임과 생리 기간만 공유돼요. 관계일·임테기·체크 기록은 공유되지 않아요. 링크를 아는 사람은 누구나 볼 수 있으니 파트너에게만 보내 주세요.' }),
+        h('button', { class: 'btn secondary', style: 'margin-top: 15px;', type: 'button', text: '🔗 공유 링크 보내기', onclick: shareCalendar }),
+        h('button', { class: 'btn', style: 'margin-top: 10px;', type: 'button', text: '💬 카카오톡으로 톡 보내기', onclick: function () { toast('카카오톡 연동은 준비 중이에요'); } })
+      ),
+      actions: [{ label: '닫기', kind: 'ghost', id: 'share-modal-close' }]
     });
   }
 
@@ -1385,7 +1398,7 @@ function legend() {
 
     return el;
   }
-  function homeScreen() {
+function homeScreen() {
     var plan = getPlan(), preg = state.settings.pregnancy, td = todayDay();
     var tp = C.dayToParts(td), notToday = ui.selected !== C.dayToISO(td) || ui.month.y !== tp.y || ui.month.m !== tp.m;
     var calCard = h('div', { class: 'cal-card' },
@@ -1397,16 +1410,22 @@ function legend() {
       h('div', { class: 'weekdays', 'aria-hidden': 'true' }, C.WEEKDAYS.map(function (w) { return h('span', { text: w }); })),
       calendar(plan), legend());
 
-    // 남편(남편) 공유 화면: 읽기 전용
+    // 👇 1. 남편(파트너) 공유 화면일 때는 읽기 전용으로 바로 리턴 (유지됨)
     if (viewOnly) return h('main', { class: 'screen' }, shareHeader(), shareDueBanner(plan), calCard, panel(plan));
 
     return h('main', { class: 'screen' },
-      h('div', { class: 'top' }, h('h1', { 'data-title': '1', text: '임신 준비 캘린더' }),
+      // 👇 2. 아내 화면 상단: '임신 준비 캘린더' 타이틀 옆에 '남편에 공유' 버튼 추가됨
+      h('div', { class: 'top' }, 
+        h('div', { style: 'display: flex; align-items: center; gap: 10px;' },
+          h('h1', { 'data-title': '1', text: '임신 준비 캘린더' }),
+          h('button', { class: 'link-btn', type: 'button', style: 'font-weight: 600; color: var(--primary); padding: 0;', text: '남편에게 공유🔗', onclick: showShareModal })
+        ),
         h('button', { class: 'icon-btn', type: 'button', id: 'btn-settings', 'data-fid': 'btn-settings', 'aria-label': '설정', onclick: function () {
-          // 👇 GA 추적 코드 추가
+          // 👇 3. 기존 GA 추적 코드 유지됨
           if (typeof window.gtag === 'function') window.gtag('event', 'click_button', { button_name: '홈_설정' });
           go('settings');
-        } }, icon('sliders'))),
+        } }, icon('sliders'))
+      ),
       ui.storageLost ? h('div', { class: 'banner warn', id: 'storage-banner', role: 'status' }, h('span', { text: '이 환경에서는 저장할 수 없어서, 앱을 닫으면 입력한 내용이 사라져요.' })) : null,
       preg ? h('div', { class: 'banner preg', id: 'preg-banner' }, h('span', { text: '임신 확인 모드예요. 가임기·검사 시기 표시를 숨겼어요.' }), h('button', { type: 'button', id: 'preg-off', text: '되돌리기', onclick: function () { setPregnancy(false); } })) : null,
       calCard,
