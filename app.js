@@ -1296,7 +1296,7 @@
       var ev = '';
       if (info && info.isOvulation) ev = '◆';
       else if (isActualStart) ev = '▲';
-      else if (info && info.period === 'predicted') ev = '△';
+     //else if (info && info.period === 'predicted') ev = '△';
 
       var attrs = {
         class: cls, type: 'button', 'data-date': iso, 'data-fid': 'cell-' + iso, 'aria-label': cellLabel(day, info, comp, hasRec, sexMark),
@@ -1333,7 +1333,6 @@ function legend() {
       // 👇 남편 뷰가 아닐 때만 얼리임테기 범례 표시
       (!viewOnly ? h('span', null, s('er'), '얼리임테기') : null),
       h('span', null, s('bd'), '생리'),
-      h('span', null, '△ 생리 예정'),
     );
   }
 
@@ -1424,7 +1423,7 @@ function legend() {
   function shareHeader() {
     return h('div', { class: 'share-head' },
       h('h1', { class: 'share-title', 'data-title': '1' },
-        h('span', { class: 'highlight-name', text: shareMeta.nick + '님' }), '과 ',
+        h('span', { class: 'highlight-name', text: shareMeta.nick + '님' }), '♥',
         h('span', { class: 'highlight-partner', text: '남편님' }), '의 임신 준비 캘린더 ',
         h('span', { class: 'title-version', text: '(' + C.shareVersionLabel(shareMeta.shared) + ' 버전)' })));
   }
