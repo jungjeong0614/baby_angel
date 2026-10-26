@@ -293,7 +293,7 @@
       var v = C.validatePeriods(l, td);
       if (!v.ok) { derived.appendChild(h('p', { class: 'field-error', role: 'alert', id: 'dates-error', text: v.errors[0] })); return; }
       derived.appendChild(h('p', { class: 'field-ok', id: 'dates-cycle', text: '주기 ' + v.cycleLen + '일로 계산돼요' }));
-      if (v.periodLen) derived.appendChild(h('p', { class: 'field-ok', id: 'dates-period', text: '생리 기간 ' + v.periodLen + '일로 계산돼요' }));
+      if (v.periodLen) derived.appendChild(h('p', { class: 'field-ok', id: 'dates-period', text: '생리 ' + v.periodLen + '일로 계산돼요' }));
       v.warnings.forEach(function (w) { derived.appendChild(h('p', { class: 'field-warn', id: 'dates-warn', text: w })); });
       nextBtn.disabled = !C.cleanNick(d.nick);   // 닉네임은 필수
     }
@@ -329,7 +329,7 @@
 
     var node = h('main', { class: 'screen' },
       topBar(null, function () { if (edit) go('settings'); else { state.consent = false; save(); go('consent'); } }),
-      h('h1', { class: 'title', 'data-title': '1', text: '마지막 생리 기간을 알려주세요' }),
+      h('h1', { class: 'title', 'data-title': '1', text: '마지막 생리을 알려주세요' }),
       h('p', { class: 'lead', text: '생리를 시작한 날과 끝난 날을 입력해 주세요. 종료일을 모르면 비워 두어도 괜찮아요.' }),
 
       nickField,
@@ -487,14 +487,14 @@
         h('h3', { text: '이렇게 계산해요' }),
         h('ul', null,
           h('li', { text: '주기: 입력한 생리 시작일 사이의 일수예요. (3개를 입력하면 최근 두 주기의 평균)' }),
-          h('li', { text: '생리 기간: 종료일을 입력하면 평균 기간으로 다음 생리 예정 기간을 보여줘요. (종료일을 모르면 5일로 가정)' }),
+          h('li', { text: '생리: 종료일을 입력하면 평균 기간으로 다음 생리 예정 기간을 보여줘요. (종료일을 모르면 5일로 가정)' }),
           h('li', { text: '배란 예정일: 다음 생리 예정일의 14일 전이에요.' }),
           h('li', { text: '가임기: 배란 예정일 5일 전부터 1일 후까지 7일이에요. 배란 예정일 2일 전~당일이 가장 가능성이 높아요.' }),
-          h('li', { text: '얼리 임테기: 배란 8일 후부터 해볼 수 있고, 10일 후부터 권장해요. 정확한 검사는 생리 예정일 이후예요.' })),
+          h('li', { text: '얼리임테기: 배란 8일 후부터 해볼 수 있고, 10일 후부터 권장해요. 정확한 검사는 생리 예정일 이후예요.' })),
         h('h3', { text: '알아두세요' }),
         h('ul', null,
           h('li', { text: '배란 시기는 사람마다, 주기마다 달라서 실제와 며칠 차이날 수 있어요.' }),
-          h('li', { text: '얼리 임테기가 음성이어도 아직 모를 수 있어요. 며칠 뒤 다시 검사해 보세요.' }),
+          h('li', { text: '얼리임테기가 음성이어도 아직 모를 수 있어요. 며칠 뒤 다시 검사해 보세요.' }),
           h('li', { text: '주기가 불규칙하거나, 1년(35세 이상은 6개월) 넘게 임신이 되지 않으면 병원 상담을 권해요.' }))),
       actions: [{ label: '확인', kind: 'secondary', id: 'help-close' }]
     });
@@ -531,7 +531,7 @@
       topBar('설정', function () { go('home'); }),
       h('div', { class: 'list' },
         h('button', { class: 'row-btn', type: 'button', id: 'set-dates', 'data-fid': 'set-dates', onclick: function () { ui.datesMode = 'edit'; ui.draft = draftFromState(); go('dates'); } },
-          h('div', { class: 'grow' }, h('div', { class: 'name', text: '닉네임 · 생리 기간 수정' }), h('div', { class: 'desc', text: (state.nick ? state.nick + ' · ' : '') + sums })), icon('next')),
+          h('div', { class: 'grow' }, h('div', { class: 'name', text: '닉네임 · 생리 수정' }), h('div', { class: 'desc', text: (state.nick ? state.nick + ' · ' : '') + sums })), icon('next')),
         h('button', { class: 'row-btn', type: 'button', id: 'set-manage', 'data-fid': 'set-manage', onclick: function () { go('manage'); } },
           h('div', { class: 'grow' }, h('div', { class: 'name', text: '체크 항목 관리' })), icon('next'))),
       h('div', { class: 'list-title', text: '기록' }),
@@ -552,7 +552,7 @@
       h('div', { class: 'footer-actions' },
         h('div', { class: 'card' },
           h('h3', { text: '👨‍👩‍👦 파트너에게 캘린더 공유' }),
-          h('p', { class: 'muted', text: '닉네임과 생리 기간만 공유돼요. 관계일·임테기·체크 기록은 공유되지 않아요. 링크를 아는 사람은 누구나 볼 수 있으니 파트너에게만 보내 주세요.' }),
+          h('p', { class: 'muted', text: '닉네임과 생리만 공유돼요. 관계일·임테기·체크 기록은 공유되지 않아요. 링크를 아는 사람은 누구나 볼 수 있으니 파트너에게만 보내 주세요.' }),
           h('button', { class: 'btn secondary', type: 'button', id: 'share-copy', text: '🔗 공유 링크 보내기', onclick: shareCalendar }),
           h('button', { class: 'btn', type: 'button', text: '💬 카카오톡으로 톡 보내기', onclick: function () {
             toast('카카오톡 연동은 준비 중이에요');
@@ -637,7 +637,7 @@
     var res = C.canSetPeriodEnd(state.starts, iso, todayDay());
     if (!res.ok) { toast(res.error, true); return; }
     pushState(function () { state.ends[res.start] = iso; });
-    toast('생리 종료일을 기록했어요 (생리 기간 ' + res.len + '일)' + (res.warning ? ' · ' + res.warning : ''));
+    toast('생리 종료일을 기록했어요 (생리 ' + res.len + '일)' + (res.warning ? ' · ' + res.warning : ''));
   }
   function cancelPeriodEnd(startIso) {
     pushState(function () { delete state.ends[startIso]; });
@@ -766,7 +766,7 @@
     for (i = 0; i < dim; i++) {
       var day = first + i, iso = C.dayToISO(day), info = plan && !preg ? C.dayInfo(plan, day) : null;
       
-      // 남편 공유 화면일 때 얼리 임테기 정보 강제 삭제
+      // 남편 공유 화면일 때 얼리임테기 정보 강제 삭제
       if (info && viewOnly) {
         info.early = null; 
       }
@@ -827,8 +827,8 @@
     return h('div', { class: 'legend', 'aria-label': '범례', id: 'legend' },
       h('span', null, s('lv3'), '가임기'),
       h('span', null, '◆ 배란일'),
-      (!viewOnly ? h('span', null, s('er'), '얼리 임테기') : null),
-      h('span', null, s('bd'), '생리 기간'),
+      (!viewOnly ? h('span', null, s('er'), '얼리임테기') : null),
+      h('span', null, s('bd'), '생리'),
       h('span', null, '△ 생리 예정'),
       (state.settings.sex && state.settings.sexMark && !viewOnly ? h('span', { id: 'legend-sex' }, '♥ 관계일') : null)
     );
@@ -944,7 +944,7 @@
       var o = info.offset, rel = o === 0 ? '배란 예정일' : (o < 0 ? '배란 예정일 ' + (-o) + '일 전' : '배란 예정일 ' + o + '일 후');
       lines.push(rel + '이에요. 이날 관계했을 때 임신 가능성은 가임기 중 \'' + C.LEVEL_LABEL[info.level] + '\' 단계예요.');
     }
-    if (info.early) lines.push('배란 ' + info.offset + '일 후예요. 얼리 임테기는 ' + (info.early === 'low' ? '해볼 수 있지만 정확도가 낮아요.' : '권장 구간이에요. 음성이면 며칠 뒤 다시 검사해 보세요.'));
+    if (info.early) lines.push('배란 ' + info.offset + '일 후예요. 얼리임테기는 ' + (info.early === 'low' ? '해볼 수 있지만 정확도가 낮아요.' : '권장 구간이에요. 음성이면 며칠 뒤 다시 검사해 보세요.'));
     if (info.uncertain) lines.push('주기가 불규칙해서 가임기가 이 근처일 수도 있어요.');
     if (info.period === 'predicted') lines.push('생리 예정일이에요. 이날부터 정확한 검사가 가능해요.');
     if (lines.length) lines.push('배란 시기는 사람마다, 주기마다 달라서 며칠 차이날 수 있어요.');
@@ -987,7 +987,7 @@
     if (f && f.inSheet) restoreFocus(f, sheetEl);
   }
 
-  /* =============== 오늘의 체크 팝업 (첫 생리 기간 설정 이후, 앱을 열 때) =============== */
+  /* =============== 오늘의 체크 팝업 (첫 생리 설정 이후, 앱을 열 때) =============== */
   // 오늘 체크할 항목이 있고 아직 다 하지 않았을 때만 띄운다. '오늘 안 보기'를 누른 날(popupHide)에는 띄우지 않는다.
   function popupDue() {
     var td = todayISO();
