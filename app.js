@@ -1409,19 +1409,19 @@ function homeScreen() {
         h('button', { class: 'icon-btn', type: 'button', id: 'month-next', 'data-fid': 'month-next', 'aria-label': '다음 달', onclick: function () { shiftMonth(1); } }, icon('next'))),
       h('div', { class: 'weekdays', 'aria-hidden': 'true' }, C.WEEKDAYS.map(function (w) { return h('span', { text: w }); })),
       calendar(plan), legend());
-
+  
     // 👇 1. 남편(파트너) 공유 화면일 때는 읽기 전용으로 바로 리턴 (유지됨)
     if (viewOnly) return h('main', { class: 'screen' }, shareHeader(), shareDueBanner(plan), calCard, panel(plan));
-
+  
     return h('main', { class: 'screen' },
       // 👇 2. 아내 화면 상단: '임신 준비 캘린더' 타이틀 옆에 '남편에 공유' 버튼 추가됨
       h('div', { class: 'top' }, 
-        h('div', { style: 'display: flex; align-items: center; gap: 10px;' },
-          h('h1', { 'data-title': '1', text: '임신 준비 캘린더' }),
-          h('button', { class: 'link-btn', type: 'button', style: 'font-weight: 600; color: var(--primary); padding: 0;', text: '남편에게 공유🔗', onclick: showShareModal })
-        ),
-        h('button', { class: 'icon-btn', type: 'button', id: 'btn-settings', 'data-fid': 'btn-settings', 'aria-label': '설정', onclick: function () {
-          // 👇 3. 기존 GA 추적 코드 유지됨
+        h('h1', { 'data-title': '1', text: '임신 준비 캘린더' }),
+        h('div', { class: 'mini-btns' },
+          // 👇 인라인 스타일 대신 style.css에 정의한 클래스(.share-link-btn) 사용
+          h('button', { class: 'share-link-btn', type: 'button', text: '남편에게 공유🔗', onclick: showShareModal }),
+          h('button', { class: 'icon-btn', type: 'button', id: 'btn-settings', 'data-fid': 'btn-settings', 'aria-label': '설정', onclick: function () {       
+          // 👇 3. 기존 GA 추적 코드 유지됨 🔗
           if (typeof window.gtag === 'function') window.gtag('event', 'click_button', { button_name: '홈_설정' });
           go('settings');
         } }, icon('sliders'))
