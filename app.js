@@ -1010,10 +1010,13 @@ function initUi() {
   }
 
   /* ---- 남편 공유 링크 만들기 ---- */
-  function buildShareUrl() {
+function buildShareUrl() {
     // 기록·체크 항목은 담지 않는다: 닉네임, 생리 시작·종료일, 공유한 날짜만
     var payload = { v: 1, n: state.nick, d: todayISO(), s: state.starts, e: state.ends };
-    return window.location.href.split('#')[0] + '#s=' + encodeShare(payload);
+    
+    // 현재 도메인 및 경로를 유지하되, 파일명을 share.html로 변경하여 공유 링크 생성
+    var basePath = window.location.href.split('#')[0].substring(0, window.location.href.split('#')[0].lastIndexOf('/') + 1);
+    return basePath + 'share.html' + '#s=' + encodeShare(payload);
   }
   function copyShare(url) {
     if (navigator.clipboard && navigator.clipboard.writeText) {
