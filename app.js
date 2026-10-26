@@ -1200,8 +1200,6 @@
 
     // 관계일 · 생리 시작 · 생리 종료는 한 묶음(한 줄)
     var bundle = h('div', { class: 'chips', id: pfx + 'rec-bundle', role: 'group', 'aria-label': '관계일·생리 기록' });
-    if (state.settings.sex) bundle.appendChild(chip('rec-sex', '관계일', rec.sex, future, function () { setRecord(iso, 'sex'); }));
-   
     if (isStart) {
       if (iso === last && state.starts.length > 2) bundle.appendChild(chip('rec-period-cancel', '생리 기록 취소', true, false, function () { cancelPeriod(iso); }));
     } else {
@@ -1216,23 +1214,6 @@
     
     // 👇 아내 화면일 때만 관계일 기록 버튼이 보이도록 수정
     if (state.settings.sex && !viewOnly) bundle.appendChild(chip('rec-sex', '관계일', rec.sex, future, function () { setRecord(iso, 'sex'); }));
-    
-    if (isStart) {
-      if (iso === last && state.starts.length > 2) bundle.appendChild(chip('rec-period-cancel', '생리 기록 취소', true, false, function () { cancelPeriod(iso); }));
-    } else {
-      bundle.appendChild(chip('rec-period', '생리', false, future, function () { recordPeriod(iso); }));
-    }
-    if (inRange) {
-      if (endIso === iso) bundle.appendChild(chip('rec-period-end-cancel', '생리 종료 취소', true, false, function () { cancelPeriodEnd(ctxStart); }));
-      else bundle.appendChild(chip('rec-period-end', '생리 종료', false, future, function () { recordPeriodEnd(iso); }));
-    }
-    if (bundle.children.length) sec.appendChild(bundle);
-
-    sec.appendChild(h('div', { class: 'rec-label', id: pfx + 'test-label', text: '임테기 결과' }));
-    var seg = h('div', { class: 'seg', role: 'radiogroup', 'aria-labelledby': pfx + 'test-label' });
-    [['neg', '음성'], ['pos', '양성'], ['faint', '흐린 선']].forEach(function (o) {
-      seg.appendChild(h('button', {
-        type: 'button', role: 'radio', 'aria-checked': rec.test === o[0] ? 'true' : 'false', disabled: future,
         id: pfx + 'test-' + o[0], 'data-fid': pfx + 'test-' + o[0], text: o[1], onclick: function () { setTest(iso, o[0]); }
       }));
     });
