@@ -1264,10 +1264,20 @@
     for (i = 0; i < lead; i++) grid.appendChild(h('div', { class: 'cell-empty', 'aria-hidden': 'true' }));
     for (i = 0; i < dim; i++) {
       var day = first + i, iso = C.dayToISO(day), info = plan && !preg ? C.dayInfo(plan, day) : null;
+ // 👇 추가된 부분: 남편 공유 화면일 때 얼리 임테기 정보 삭제
+      if (info && viewOnly) {
+        info.early = null; 
+      }
+
+      var comp = day <= td ? C.completion(state, iso) : { total: 0, done: 0 };
+      var isActualStart = state.starts.indexOf(iso) >= 0;
+// ... (아래 기존 코드 유지) ...
       var comp = day <= td ? C.completion(state, iso) : { total: 0, done: 0 };
       var isActualStart = state.starts.indexOf(iso) >= 0;
       var rr = state.records[iso];
       var hasRec = !!rr || isActualStart;
+
+      
 
       // 관계일: 기록 사용 + 표시 설정이 모두 켜져 있으면 ♥
       var sexMark = !!(rr && rr.sex && state.settings.sex && state.settings.sexMark);
@@ -1314,16 +1324,17 @@
   }
   function monthLabelText() { return ui.month.y + '년 ' + ui.month.m + '월 달력'; }
 
-  function legend() {
+function legend() {
     if (state.settings.pregnancy) return null;
     var s = function (cls) { return h('i', { class: 'sw ' + cls }); };
     return h('div', { class: 'legend', 'aria-label': '범례', id: 'legend' },
       h('span', null, s('lv3'), '가임기'),
       h('span', null, '◆ 배란일'),
-      h('span', null, s('er'), '얼리 임테기'),
+      // 👇 남편 뷰가 아닐 때만 얼리 임테기 범례 표시
+      (!viewOnly ? h('span', null, s('er'), '얼리 임테기') : null),
       h('span', null, s('bd'), '생리 기간'),
       h('span', null, '△ 생리 예정'),
-      state.settings.sex && state.settings.sexMark ? h('span', { id: 'legend-sex' }, '♥ 관계일') : null);
+    );
   }
 
   function panel(plan) {
@@ -1332,6 +1343,13 @@
     var info = plan && !preg ? C.dayInfo(plan, day) : null;
     var g = plan && !preg ? C.guidance(plan, day, td) : null;
 
+    // 👇 추가된 부분: 남편 공유 화면일 때 얼리 임테기 텍스트 안내(guidance) 강제 제거
+    if (viewOnly) {
+      if (info) info.early = null;
+      if (g && (g.id === 'luteal' || g.id === 'early-low' || g.id === 'early')) g = null;
+    }
+
+// ... (아래 기존 코드 유지) ...
     var shortText = '';
     if (g) {
       shortText = g.title;
@@ -1458,6 +1476,13 @@
     var f = captureFocus(), sy = sheetEl.scrollTop;
     var td = todayDay(), iso = ui.selected, day = C.isoToDay(iso), preg = state.settings.pregnancy, plan = getPlan();
     var info = plan && !preg ? C.dayInfo(plan, day) : null, g = plan && !preg ? C.guidance(plan, day, td) : null;
+  // 👇 추가된 부분: 시트 안에서도 남편 뷰일 땐 얼리 임테기 문구 제거
+    if (viewOnly) {
+      if (info) info.early = null;
+      if (g && (g.id === 'luteal' || g.id === 'early-low' || g.id === 'early')) g = null;
+    }
+
+  // ... (아래 기존 코드 유지) ...
     var inner = h('div', { class: 'sheet-in' },
       h('div', { class: 'sheet-grab', 'aria-hidden': 'true' }),
       h('div', { class: 'sheet-top' },
