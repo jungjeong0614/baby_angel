@@ -1251,71 +1251,70 @@ function itemsScreen() {
     });
   }
 function settingsScreen() {
-  // 남편 공유하기 UI 섹션
-h('div', { class: 'card', style: 'margin-bottom: 20px;' },
-  h('h3', { text: '👨‍👩‍👦 파트너에게 캘린더 공유' }),
-  h('p', { text: '이번 달 가임기 일정과 내 기록을 남편에게 공유합니다.', style: 'font-size: 14px; color: #666; margin-bottom: 15px;' }),
-  
-  // 1. URL 링크 복사 버튼 (완벽하게 작동함)
-  h('button', { class: 'btn secondary', style: 'margin-bottom: 10px;', type: 'button', text: '🔗 링크 복사하기', onclick: function() {
-    var shareUrl = window.location.href; // 추후 남편 전용 고유 링크(?room=xxx)로 변경될 예정
-    navigator.clipboard.writeText(shareUrl).then(function() {
-      alert('공유 링크가 복사되었습니다! 메신저에서 붙여넣기 해주세요.');
-    }).catch(function() {
-      alert('링크 복사를 지원하지 않는 브라우저입니다.');
-    });
-  } }),
-
-  // 2. 카카오톡 공유 버튼 (현재는 UI 테스트용)
-  h('button', { class: 'btn', style: 'background-color: #FEE500; color: #000; border: none;', type: 'button', text: '💬 카카오톡으로 톡 보내기', onclick: function() {
-    alert('카카오톡 공식 연동(API 키 발급) 세팅 후 활성화할 예정입니다.');
-  } })
-),
-    var sums = state.starts.map(function (x) { var a = C.mdLabel(C.isoToDay(x)); return state.ends[x] ? a + '~' + C.mdLabel(C.isoToDay(state.ends[x])) : a; }).join(', ');
-    return h('main', { class: 'screen' },
-      topBar('설정', function () { go('home'); }),
-      h('div', { class: 'list' },
-        h('button', { class: 'row-btn', type: 'button', id: 'set-dates', 'data-fid': 'set-dates', onclick: function () { ui.datesMode = 'edit'; ui.draft = draftFromState(); go('dates'); } },
-          h('div', { class: 'grow' }, h('div', { class: 'name', text: '생리 기간 수정' }), h('div', { class: 'desc', text: sums })), icon('next')),
-        h('button', { class: 'row-btn', type: 'button', id: 'set-manage', 'data-fid': 'set-manage', onclick: function () { go('manage'); } },
-          h('div', { class: 'grow' }, h('div', { class: 'name', text: '체크 항목 관리' })), icon('next'))),
-      h('div', { class: 'list-title', text: '기록' }),
-      h('div', { class: 'list' },
-        h('div', { class: 'row' }, h('div', { class: 'grow' }, h('div', { class: 'name', text: '관계일 기록 사용' }), h('div', { class: 'desc', text: '날짜마다 관계일을 남길 수 있어요' })),
-          switchBtn('관계일 기록 사용', state.settings.sex, function () { pushState(function () { state.settings.sex = !state.settings.sex; }); }, 'sw-sex')),
-        h('div', { class: 'row' + (state.settings.sex ? '' : ' is-off') }, h('div', { class: 'grow' }, h('div', { class: 'name', text: '캘린더에 ♥로 표시' }), h('div', { class: 'desc', text: '끄면 눈에 띄지 않는 작은 점으로만 표시돼요' })),
-          h('button', { class: 'switch', type: 'button', role: 'switch', id: 'sw-sexmark', 'aria-checked': state.settings.sexMark ? 'true' : 'false', 'aria-label': '캘린더에 ♥로 표시', disabled: !state.settings.sex, 'data-fid': 'sw-sexmark',
-            onclick: function () { pushState(function () { state.settings.sexMark = !state.settings.sexMark; }); } })),
-        h('div', { class: 'row' }, h('div', { class: 'grow' }, h('div', { class: 'name', text: '임신 확인 모드' }), h('div', { class: 'desc', text: '가임기·검사 시기 표시를 숨겨요' })),
-          switchBtn('임신 확인 모드', state.settings.pregnancy, function () { setPregnancy(!state.settings.pregnancy); }, 'sw-preg'))),
-      h('div', { class: 'list-title', text: '안내' }),
-      h('div', { class: 'list' },
-        h('button', { class: 'row-btn', type: 'button', id: 'set-help', onclick: showHelp }, h('div', { class: 'grow' }, h('div', { class: 'name', text: '계산 방식과 도움말' })), icon('next')),
-        h('button', { class: 'row-btn', type: 'button', id: 'set-policy', onclick: showPolicy }, h('div', { class: 'grow' }, h('div', { class: 'name', text: '개인정보 안내' })), icon('next'))),
-      h('p', { class: 'note', text: '기록은 최근 24개월까지 보관하고, 오래된 기록은 자동으로 지워져요. 모든 정보는 이 기기 안에만 있어요.' }),
-      h('div', { class: 'footer-actions' }, 
-        h('button', { class: 'btn danger', type: 'button', id: 'set-delete-all', text: '내 정보 전체 삭제', onclick: function() {
-          // 👇 GA 추적 코드 추가
-          if (typeof window.gtag === 'function') window.gtag('event', 'click_button', { button_name: '설정_데이터전체삭제' });
-          confirmDeleteAll();
+  var sums = state.starts.map(function (x) { var a = C.mdLabel(C.isoToDay(x)); return state.ends[x] ? a + '~' + C.mdLabel(C.isoToDay(state.ends[x])) : a; }).join(', ');
+  return h('main', { class: 'screen' },
+    topBar('설정', function () { go('home'); }),
+    h('div', { class: 'list' },
+      h('button', { class: 'row-btn', type: 'button', id: 'set-dates', 'data-fid': 'set-dates', onclick: function () { ui.datesMode = 'edit'; ui.draft = draftFromState(); go('dates'); } },
+        h('div', { class: 'grow' }, h('div', { class: 'name', text: '생리 기간 수정' }), h('div', { class: 'desc', text: sums })), icon('next')),
+      h('button', { class: 'row-btn', type: 'button', id: 'set-manage', 'data-fid': 'set-manage', onclick: function () { go('manage'); } },
+        h('div', { class: 'grow' }, h('div', { class: 'name', text: '체크 항목 관리' })), icon('next'))),
+    h('div', { class: 'list-title', text: '기록' }),
+    h('div', { class: 'list' },
+      h('div', { class: 'row' }, h('div', { class: 'grow' }, h('div', { class: 'name', text: '관계일 기록 사용' }), h('div', { class: 'desc', text: '날짜마다 관계일을 남길 수 있어요' })),
+        switchBtn('관계일 기록 사용', state.settings.sex, function () { pushState(function () { state.settings.sex = !state.settings.sex; }); }, 'sw-sex')),
+      h('div', { class: 'row' + (state.settings.sex ? '' : ' is-off') }, h('div', { class: 'grow' }, h('div', { class: 'name', text: '캘린더에 ♥로 표시' }), h('div', { class: 'desc', text: '끄면 눈에 띄지 않는 작은 점으로만 표시돼요' })),
+        h('button', { class: 'switch', type: 'button', role: 'switch', id: 'sw-sexmark', 'aria-checked': state.settings.sexMark ? 'true' : 'false', 'aria-label': '캘린더에 ♥로 표시', disabled: !state.settings.sex, 'data-fid': 'sw-sexmark',
+          onclick: function () { pushState(function () { state.settings.sexMark = !state.settings.sexMark; }); } })),
+      h('div', { class: 'row' }, h('div', { class: 'grow' }, h('div', { class: 'name', text: '임신 확인 모드' }), h('div', { class: 'desc', text: '가임기·검사 시기 표시를 숨겨요' })),
+        switchBtn('임신 확인 모드', state.settings.pregnancy, function () { setPregnancy(!state.settings.pregnancy); }, 'sw-preg'))),
+    h('div', { class: 'list-title', text: '안내' }),
+    h('div', { class: 'list' },
+      h('button', { class: 'row-btn', type: 'button', id: 'set-help', onclick: showHelp }, h('div', { class: 'grow' }, h('div', { class: 'name', text: '계산 방식과 도움말' })), icon('next')),
+      h('button', { class: 'row-btn', type: 'button', id: 'set-policy', onclick: showPolicy }, h('div', { class: 'grow' }, h('div', { class: 'name', text: '개인정보 안내' })), icon('next'))),
+    h('p', { class: 'note', text: '기록은 최근 24개월까지 보관하고, 오래된 기록은 자동으로 지워져요. 모든 정보는 이 기기 안에만 있어요.' }),
+    
+    h('div', { class: 'footer-actions' }, 
+      // 파트너에게 캘린더 공유 기능 UI
+      h('div', { class: 'card', style: 'margin-bottom: 20px;' },
+        h('h3', { text: '👨‍👩‍👦 파트너에게 캘린더 공유' }),
+        h('p', { text: '이번 달 가임기 일정과 내 기록을 남편에게 공유합니다.', style: 'font-size: 14px; color: #666; margin-bottom: 15px;' }),
+        h('button', { class: 'btn secondary', style: 'margin-bottom: 10px;', type: 'button', text: '🔗 링크 복사하기', onclick: function() {
+          var shareUrl = window.location.href;
+          navigator.clipboard.writeText(shareUrl).then(function() {
+            alert('공유 링크가 복사되었습니다! 메신저에서 붙여넣기 해주세요.');
+          }).catch(function() {
+            alert('링크 복사를 지원하지 않는 브라우저입니다.');
+          });
         } }),
-        h('p', { class: 'muted email-contact', text: '문의 prayforyou.official@gmail.com' })
-      )
-    );
-  }
-  function setPregnancy(on) { pushState(function () { state.settings.pregnancy = on; }); toast(on ? '임신 확인 모드로 바꿨어요' : '가임기 표시를 다시 켰어요'); }
-  function confirmDeleteAll() {
-    openModal({
-      title: '모든 정보를 삭제할까요?',
-      body: para('생리 시작일, 체크 항목과 기록, 설정이 모두 지워지고 되돌릴 수 없어요.'),
-      actions: [
-        { label: '삭제하기', kind: 'danger', id: 'delete-confirm', onClick: function () {
-          Store.clear(); state = C.freshState(); planCache = { key: '', plan: null };
-          ui.addDraft = ''; ui.addError = ''; initUi(); ui.storageLost = Store.mode() === 'memory'; go('consent'); toast('모든 정보를 삭제했어요');
-        } },
-        { label: '취소', kind: 'ghost', id: 'delete-cancel' }]
-    });
-  }
+        h('button', { class: 'btn', style: 'background-color: #FEE500; color: #000; border: none;', type: 'button', text: '💬 카카오톡으로 톡 보내기', onclick: function() {
+          alert('카카오톡 공식 연동(API 키 발급) 세팅 후 활성화할 예정입니다.');
+        } })
+      ),
+      // GA 추적 코드가 포함된 데이터 전체 삭제 버튼
+      h('button', { class: 'btn danger', type: 'button', id: 'set-delete-all', text: '내 정보 전체 삭제', onclick: function() {
+        if (typeof window.gtag === 'function') window.gtag('event', 'click_button', { button_name: '설정_데이터전체삭제' });
+        confirmDeleteAll();
+      } }),
+      h('p', { class: 'muted email-contact', text: '문의 prayforyou.official@gmail.com' })
+    )
+  );
+}
+
+function setPregnancy(on) { pushState(function () { state.settings.pregnancy = on; }); toast(on ? '임신 확인 모드로 바꿨어요' : '가임기 표시를 다시 켰어요'); }
+
+function confirmDeleteAll() {
+  openModal({
+    title: '모든 정보를 삭제할까요?',
+    body: para('생리 시작일, 체크 항목과 기록, 설정이 모두 지워지고 되돌릴 수 없어요.'),
+    actions: [
+      { label: '삭제하기', kind: 'danger', id: 'delete-confirm', onClick: function () {
+        Store.clear(); state = C.freshState(); planCache = { key: '', plan: null };
+        ui.addDraft = ''; ui.addError = ''; initUi(); ui.storageLost = Store.mode() === 'memory'; go('consent'); toast('모든 정보를 삭제했어요');
+      } },
+      { label: '취소', kind: 'ghost', id: 'delete-cancel' }]
+  });
+}
 
   /* =============== 체크·기록 동작 =============== */
   function toggleCheck(iso, id) {
