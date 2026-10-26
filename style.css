@@ -165,22 +165,26 @@ button.icon-btn[disabled]:hover { background: transparent; }
   position: absolute; 
   left: 9px; 
   right: 9px; 
-  bottom: 6px; /* 바닥에서 고정된 위치 */
+  bottom: 6px; 
   height: 4px !important; 
   min-height: 4px !important; 
   max-height: 4px !important; 
+  box-sizing: border-box !important;
   border-radius: 4px; 
   background: rgba(25,31,40,.12); 
   overflow: hidden; 
 }
 .cell .bar i { 
   display: block; 
+  position: absolute;
+  top: 0;
+  left: 0;
+  bottom: 0;
   height: 100% !important; 
-  min-height: 100% !important; 
-  max-height: 100% !important;
   width: calc(var(--p, 0) * 100%); 
   background: var(--primary); 
   border-radius: 4px; 
+  box-sizing: border-box !important;
 }
 .cell.is-selected { box-shadow: inset 0 0 0 2px var(--primary); }
 .cell.bleed { background: var(--bleed); }
