@@ -1048,17 +1048,6 @@
         h('button', { class: 'row-btn', type: 'button', id: 'set-help', onclick: showHelp }, h('div', { class: 'grow' }, h('div', { class: 'name', text: '계산 방식과 도움말' })), icon('next')),
         h('button', { class: 'row-btn', type: 'button', id: 'set-policy', onclick: showPolicy }, h('div', { class: 'grow' }, h('div', { class: 'name', text: '개인정보 안내' })), icon('next'))),
       h('p', { class: 'note', text: '기록은 최근 24개월까지 보관하고, 오래된 기록은 자동으로 지워져요. 모든 정보는 이 기기 안에만 있어요.' }),
-
-      h('div', { class: 'footer-actions' },
-        h('div', { class: 'card' },
-          h('h3', { text: '👨‍👩‍👦 남편에게 캘린더 공유' }),
-          h('p', { class: 'muted', text: '닉네임과 생리만 공유돼요. 관계일·임테기·체크 기록은 공유되지 않아요. 링크를 아는 사람은 누구나 볼 수 있으니 남편에게만 보내 주세요.' }),
-          h('button', { class: 'btn secondary', type: 'button', id: 'share-copy', text: '🔗 공유 링크 보내기', onclick: shareCalendar }),
-          h('button', { class: 'btn', type: 'button', text: '💬 카카오톡으로 톡 보내기', onclick: function () {
-            toast('카카오톡 연동은 준비 중이에요');
-          } })
-        ),
-
         // GA 추적 코드가 포함된 데이터 전체 삭제 버튼
         h('button', { class: 'btn danger', type: 'button', id: 'set-delete-all', text: '내 정보 전체 삭제', onclick: function () {
           if (typeof window.gtag === 'function') window.gtag('event', 'click_button', { button_name: '설정_데이터전체삭제' });
