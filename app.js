@@ -1058,12 +1058,11 @@ function initUi() {
       h('p', { class: 'note', text: '기록은 최근 24개월까지 보관하고, 오래된 기록은 자동으로 지워져요. 모든 정보는 이 기기 안에만 있어요.' }),
 
       h('div', { class: 'footer-actions' },
-        h('div', { class: 'card' },
+h('div', { class: 'card' },
           h('h3', { text: '👨‍👩‍👦 남편에게 캘린더 공유' }),
-          h('p', { class: 'muted', text: '닉네임과 생리기간, 가임기, 배린일이 공유돼요!. 링크를 아는 사람은 누구나 볼 수 있으니 남편에게만 보내주세요.' }),
+          h('p', { class: 'muted', text: '닉네임과 생리기간, 가임기, 배란일이 공유돼요! 링크를 아는 사람은 누구나 볼 수 있으니 남편에게만 보내주세요.' }), // 👈 '배란일' 수정 및 불필요한 마침표 정리
           h('button', { class: 'btn secondary', type: 'button', id: 'share-copy', text: '🔗 공유 링크 보내기', onclick: shareCalendar })
         ),
-
         // GA 추적 코드가 포함된 데이터 전체 삭제 버튼
         h('button', { class: 'btn danger', type: 'button', id: 'set-delete-all', text: '내 정보 전체 삭제', onclick: function () {
           if (typeof window.gtag === 'function') window.gtag('event', 'click_button', { button_name: '설정_데이터전체삭제' });
