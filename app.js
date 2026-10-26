@@ -586,11 +586,11 @@
     var ok = Store.write(JSON.stringify(state));
     if (!ok && Store.mode() === 'memory') ui.storageLost = true;
   }
-  function initUi() {
+function initUi() {
     var td = todayDay(), p = C.dayToParts(td);
     ui.selected = C.dayToISO(td); ui.month = { y: p.y, m: p.m };
     if (viewOnly) ui.screen = shareBad ? 'shareError' : 'home';
-    else ui.screen = !state.consent ? 'consent' : (state.starts.length < 2 ? 'dates' : 'home');
+    else ui.screen = 'home'; // 👈 Direkta a ikabil iti home tapno malaktawan ti consent wenno dates setup
     ui.datesMode = 'onboarding';
     ui.draft = draftFromState();
     if (!viewOnly && Store.mode() === 'memory') ui.storageLost = true;
