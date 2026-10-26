@@ -1181,7 +1181,7 @@ h('div', { class: 'card' },
       });
       if (future) sec.appendChild(h('p', { class: 'note', text: '아직 오지 않은 날짜는 체크할 수 없어요.' }));
     } else if (!anyEnabled()) {
-      sec.appendChild(h('div', { class: 'empty' }, h('p', { text: '아직 체크 항목이 없어요.' }),
+      sec.appendChild(h('div', { class: 'empty' }, h('p', { text: '영양제 등 매일 체크할 리스트를 만들어보세요.' }),
         h('button', { class: 'btn secondary small', type: 'button', id: pfx + 'empty-add', text: '항목 추가하기', onclick: function () { go('manage'); } })));
     } else {
       sec.appendChild(h('div', { class: 'empty' }, h('p', { text: future ? '아직 오지 않은 날짜예요.' : '이 날짜에 해당하는 항목이 없어요.' })));
