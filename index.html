@@ -1274,12 +1274,14 @@ function settingsScreen() {
       h('button', { class: 'row-btn', type: 'button', id: 'set-policy', onclick: showPolicy }, h('div', { class: 'grow' }, h('div', { class: 'name', text: '개인정보 안내' })), icon('next'))),
     h('p', { class: 'note', text: '기록은 최근 24개월까지 보관하고, 오래된 기록은 자동으로 지워져요. 모든 정보는 이 기기 안에만 있어요.' }),
     
+// ... (위쪽 기존 코드 동일) ...
     h('div', { class: 'footer-actions' }, 
-      // 파트너에게 캘린더 공유 기능 UI
-      h('div', { class: 'card', style: 'margin-bottom: 20px;' },
+      // 👇 에러를 일으킨 style 속성을 모두 제거한 안전한 버전
+      h('div', { class: 'card' },
         h('h3', { text: '👨‍👩‍👦 파트너에게 캘린더 공유' }),
-        h('p', { text: '이번 달 가임기 일정과 내 기록을 남편에게 공유합니다.', style: 'font-size: 14px; color: #666; margin-bottom: 15px;' }),
-        h('button', { class: 'btn secondary', style: 'margin-bottom: 10px;', type: 'button', text: '🔗 링크 복사하기', onclick: function() {
+        h('p', { text: '이번 달 가임기 일정과 내 기록을 남편에게 공유합니다.' }),
+        
+        h('button', { class: 'btn secondary', type: 'button', text: '🔗 링크 복사하기', onclick: function() {
           var shareUrl = window.location.href;
           navigator.clipboard.writeText(shareUrl).then(function() {
             alert('공유 링크가 복사되었습니다! 메신저에서 붙여넣기 해주세요.');
@@ -1287,10 +1289,12 @@ function settingsScreen() {
             alert('링크 복사를 지원하지 않는 브라우저입니다.');
           });
         } }),
-        h('button', { class: 'btn', style: 'background-color: #FEE500; color: #000; border: none;', type: 'button', text: '💬 카카오톡으로 톡 보내기', onclick: function() {
+
+        h('button', { class: 'btn', type: 'button', text: '💬 카카오톡으로 톡 보내기', onclick: function() {
           alert('카카오톡 공식 연동(API 키 발급) 세팅 후 활성화할 예정입니다.');
         } })
-      ),
+      ), // 👈 쉼표 유지
+
       // GA 추적 코드가 포함된 데이터 전체 삭제 버튼
       h('button', { class: 'btn danger', type: 'button', id: 'set-delete-all', text: '내 정보 전체 삭제', onclick: function() {
         if (typeof window.gtag === 'function') window.gtag('event', 'click_button', { button_name: '설정_데이터전체삭제' });
@@ -1300,7 +1304,7 @@ function settingsScreen() {
     )
   );
 }
-
+// ... (아래 setPregnancy, confirmDeleteAll 함수들 동일) ...
 function setPregnancy(on) { pushState(function () { state.settings.pregnancy = on; }); toast(on ? '임신 확인 모드로 바꿨어요' : '가임기 표시를 다시 켰어요'); }
 
 function confirmDeleteAll() {
