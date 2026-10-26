@@ -589,14 +589,15 @@
 function initUi() {
     var td = todayDay(), p = C.dayToParts(td);
     ui.selected = C.dayToISO(td); ui.month = { y: p.y, m: p.m };
-    if (viewOnly) {
-        ui.screen = shareBad ? 'shareError' : 'home';
-    } else {
-        // 동의 및 날짜 체크를 건너뛰고 바로 home 화면으로 설정
-        state.consent = true;
-        ui.screen = 'home';
+    
+    // 동의 및 온보딩/체크항목 화면을 완전히 우회
+    state.consent = true;
+    if (!state.starts || state.starts.length === 0) {
+        state.starts = [td]; // 데이터가 없어 체크 화면으로 빠지는 것 방지
     }
-    ui.datesMode = 'onboarding';
+    
+    ui.screen = 'home';
+    ui.datesMode = 'normal'; // 'onboarding' 대신 'normal'로 설정
     ui.draft = draftFromState();
     if (!viewOnly && Store.mode() === 'memory') ui.storageLost = true;
 }
@@ -813,7 +814,7 @@ function initUi() {
       state.starts = v.days.map(C.dayToISO); state.ends = ends; save();
       ui.selected = C.dayToISO(td); var tp = C.dayToParts(td); ui.month = { y: tp.y, m: tp.m };
       if (edit) { toast('저장했어요'); go('home'); }
-      else go('items');
+      else go('home');
     }
     function field(id, label, key, aria) {
       var inp = h('input', { type: 'date', id: id, max: max, min: '2000-01-01', 'aria-label': aria, 'data-fid': id });
