@@ -589,18 +589,21 @@
 function initUi() {
     var td = todayDay(), p = C.dayToParts(td);
     ui.selected = C.dayToISO(td); ui.month = { y: p.y, m: p.m };
-    
-    // 동의 및 온보딩/체크항목 화면을 완전히 우회
-    state.consent = true;
-    if (!state.starts || state.starts.length === 0) {
-        state.starts = [td]; // 데이터가 없어 체크 화면으로 빠지는 것 방지
+    if (viewOnly) ui.screen = shareBad ? 'shareError' : 'home';
+    else {
+      // 💡 동의를 안 했으면 'consent', 동의는 했는데 생리 시작일 데이터가 아예 없다면 'dates', 다 있다면 바로 'home'
+      if (!state.consent) {
+        ui.screen = 'consent';
+      } else if (!state.starts || state.starts.length === 0) {
+        ui.screen = 'dates';
+      } else {
+        ui.screen = 'home';
+      }
     }
-    
-    ui.screen = 'home';
-    ui.datesMode = 'normal'; // 'onboarding' 대신 'normal'로 설정
+    ui.datesMode = 'onboarding';
     ui.draft = draftFromState();
     if (!viewOnly && Store.mode() === 'memory') ui.storageLost = true;
-}
+  }
   function draftFromState() {
     var s = state.starts, e = function (x) { return (x && state.ends[x]) || ''; }, nick = state.nick || '';
     if (s.length === 3) return { nick: nick, a: s[0], aE: e(s[0]), b: s[1], bE: e(s[1]), c: s[2], cE: e(s[2]), third: true };
@@ -814,7 +817,7 @@ function initUi() {
       state.starts = v.days.map(C.dayToISO); state.ends = ends; save();
       ui.selected = C.dayToISO(td); var tp = C.dayToParts(td); ui.month = { y: tp.y, m: tp.m };
       if (edit) { toast('저장했어요'); go('home'); }
-      else go('home');
+      else go('items');
     }
     function field(id, label, key, aria) {
       var inp = h('input', { type: 'date', id: id, max: max, min: '2000-01-01', 'aria-label': aria, 'data-fid': id });
@@ -964,6 +967,7 @@ function initUi() {
 
   /* =============== S1-2. 체크 항목 선택 (온보딩) =============== */
   function itemsScreen() {
+    setTimeout(function () { go('home'); }, 0);
     return h('main', { class: 'screen' },
       topBar(null, function () { ui.datesMode = 'onboarding'; ui.draft = draftFromState(); go('dates'); }),
       h('h1', { class: 'title', 'data-title': '1', text: '챙기고 싶은 항목을 골라보세요' }),
@@ -1181,7 +1185,7 @@ h('div', { class: 'card' },
       });
       if (future) sec.appendChild(h('p', { class: 'note', text: '아직 오지 않은 날짜는 체크할 수 없어요.' }));
     } else if (!anyEnabled()) {
-      sec.appendChild(h('div', { class: 'empty' }, h('p', { text: '영양제 등 매일 체크할 리스트를 만들어보세요.' }),
+      sec.appendChild(h('div', { class: 'empty' }, h('p', { text: '아직 체크 항목이 없어요.' }),
         h('button', { class: 'btn secondary small', type: 'button', id: pfx + 'empty-add', text: '항목 추가하기', onclick: function () { go('manage'); } })));
     } else {
       sec.appendChild(h('div', { class: 'empty' }, h('p', { text: future ? '아직 오지 않은 날짜예요.' : '이 날짜에 해당하는 항목이 없어요.' })));
