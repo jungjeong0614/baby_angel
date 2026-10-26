@@ -1426,16 +1426,20 @@ function showShareModal() {
     openModal({
       title: '👨‍👩‍👦 남편에게 캘린더 공유',
       body: h('div', null,
-        h('p', { class: 'muted', text: '닉네임과 생리기간, 가임기, 배란일이 공유돼요! 
-          링크를 아는 사람은 누구나 볼 수 있으니 남편에게만 보내주세요.
-          
-          ' }),
+        h('p', { class: 'muted' }, [
+          h('br'), // 윗쪽에 빈 줄 추가
+          '닉네임과 생리기간, 가임기, 배란일이 공유돼요!',
+          h('br'), // 문장 사이 줄바꿈
+          h('br'), // 문장 사이 빈 줄 추가 (필요에 따라 하나 더 추가 가능)
+          '링크를 아는 사람은 누구나 볼 수 있으니 남편에게만 보내주세요.',
+          h('br')  // 아랫쪽에 빈 줄 추가
+        ]),
         h('button', { class: 'btn secondary', type: 'button', id: 'share-copy', text: '🔗 공유 링크 보내기', onclick: shareCalendar })
       ),
       actions: [
         { label: '닫기', kind: 'ghost', id: 'share-modal-close' }
       ]
-    }); // 👈 openModal을 여는 괄호와 중괄호가 여기서 정확히 닫혀야 합니다!
+    });
   }
   function initToday() {
     var td = todayDay(), p = C.dayToParts(td);
