@@ -1385,7 +1385,7 @@ function legend() {
 
     return el;
   }
-  function homeScreen() {
+function homeScreen() {
     var plan = getPlan(), preg = state.settings.pregnancy, td = todayDay();
     var tp = C.dayToParts(td), notToday = ui.selected !== C.dayToISO(td) || ui.month.y !== tp.y || ui.month.m !== tp.m;
     var calCard = h('div', { class: 'cal-card' },
@@ -1397,16 +1397,20 @@ function legend() {
       h('div', { class: 'weekdays', 'aria-hidden': 'true' }, C.WEEKDAYS.map(function (w) { return h('span', { text: w }); })),
       calendar(plan), legend());
 
-    // 남편(남편) 공유 화면: 읽기 전용
+    // 남편 읽기 전용 화면일 때
     if (viewOnly) return h('main', { class: 'screen' }, shareHeader(), shareDueBanner(plan), calCard, panel(plan));
 
     return h('main', { class: 'screen' },
-      h('div', { class: 'top' }, h('h1', { 'data-title': '1', text: '임신 준비 캘린더' }),
-        h('button', { class: 'icon-btn', type: 'button', id: 'btn-settings', 'data-fid': 'btn-settings', 'aria-label': '설정', onclick: function () {
-          // 👇 GA 추적 코드 추가
-          if (typeof window.gtag === 'function') window.gtag('event', 'click_button', { button_name: '홈_설정' });
-          go('settings');
-        } }, icon('sliders'))),
+      h('div', { class: 'top' }, 
+        h('h1', { 'data-title': '1', text: '임신 준비 캘린더' }),
+        h('div', { class: 'mini-btns' },
+          h('button', { class: 'link-btn', type: 'button', text: '남편에게 공유하기', onclick: showShareModal }),
+          h('button', { class: 'icon-btn', type: 'button', id: 'btn-settings', 'data-fid': 'btn-settings', 'aria-label': '설정', onclick: function () {
+            if (typeof window.gtag === 'function') window.gtag('event', 'click_button', { button_name: '홈_설정' });
+            go('settings');
+          } }, icon('sliders'))
+        )
+      ),
       ui.storageLost ? h('div', { class: 'banner warn', id: 'storage-banner', role: 'status' }, h('span', { text: '이 환경에서는 저장할 수 없어서, 앱을 닫으면 입력한 내용이 사라져요.' })) : null,
       preg ? h('div', { class: 'banner preg', id: 'preg-banner' }, h('span', { text: '임신 확인 모드예요. 가임기·검사 시기 표시를 숨겼어요.' }), h('button', { type: 'button', id: 'preg-off', text: '되돌리기', onclick: function () { setPregnancy(false); } })) : null,
       calCard,
