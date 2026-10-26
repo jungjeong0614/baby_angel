@@ -589,21 +589,17 @@
 function initUi() {
     var td = todayDay(), p = C.dayToParts(td);
     ui.selected = C.dayToISO(td); ui.month = { y: p.y, m: p.m };
-    if (viewOnly) ui.screen = shareBad ? 'shareError' : 'home';
-    else {
-      // 💡 동의를 안 했으면 'consent', 동의는 했는데 생리 시작일 데이터가 아예 없다면 'dates', 다 있다면 바로 'home'
-      if (!state.consent) {
-        ui.screen = 'consent';
-      } else if (!state.starts || state.starts.length === 0) {
-        ui.screen = 'dates';
-      } else {
+    if (viewOnly) {
+        ui.screen = shareBad ? 'shareError' : 'home';
+    } else {
+        // 동의 및 날짜 체크를 건너뛰고 바로 home 화면으로 설정
+        state.consent = true;
         ui.screen = 'home';
-      }
     }
     ui.datesMode = 'onboarding';
     ui.draft = draftFromState();
     if (!viewOnly && Store.mode() === 'memory') ui.storageLost = true;
-  }
+}
   function draftFromState() {
     var s = state.starts, e = function (x) { return (x && state.ends[x]) || ''; }, nick = state.nick || '';
     if (s.length === 3) return { nick: nick, a: s[0], aE: e(s[0]), b: s[1], bE: e(s[1]), c: s[2], cE: e(s[2]), third: true };
