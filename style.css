@@ -162,29 +162,28 @@ button.icon-btn[disabled]:hover { background: transparent; }
 .cell .dot.second { left: 18px; top: 4px; }
 .cell.lv-4 .heart { color: #fff; }
 .cell .bar { 
-  position: absolute; 
-  left: 9px; 
-  right: 9px; 
-  bottom: 6px; 
+  position: absolute !important; 
+  left: 9px !important; 
+  right: 9px !important; 
+  bottom: 6px !important; 
   height: 4px !important; 
   min-height: 4px !important; 
   max-height: 4px !important; 
-  box-sizing: border-box !important;
-  border-radius: 4px; 
-  background: rgba(25,31,40,.12); 
-  overflow: hidden; 
+  border-radius: 4px !important; 
+  background: rgba(25,31,40,.12) !important; 
+  overflow: hidden !important; 
 }
 .cell .bar i { 
-  display: block; 
-  position: absolute;
-  top: 0;
-  left: 0;
-  bottom: 0;
-  height: 100% !important; 
-  width: calc(var(--p, 0) * 100%); 
-  background: var(--primary); 
-  border-radius: 4px; 
-  box-sizing: border-box !important;
+  display: block !important; 
+  position: absolute !important;
+  top: 0 !important;
+  left: 0 !important;
+  height: 4px !important; 
+  min-height: 4px !important;
+  max-height: 4px !important;
+  width: calc(var(--p, 0) * 100%) !important; 
+  background: var(--primary) !important; 
+  border-radius: 4px !important; 
 }
 .cell.is-selected { box-shadow: inset 0 0 0 2px var(--primary); }
 .cell.bleed { background: var(--bleed); }
