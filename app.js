@@ -590,7 +590,16 @@ function initUi() {
     var td = todayDay(), p = C.dayToParts(td);
     ui.selected = C.dayToISO(td); ui.month = { y: p.y, m: p.m };
     if (viewOnly) ui.screen = shareBad ? 'shareError' : 'home';
-    else ui.screen = 'home'; // 👈 Direkta a ikabil iti home tapno malaktawan ti consent wenno dates setup
+    else {
+      // 💡 동의를 안 했으면 'consent', 동의는 했는데 생리 시작일 데이터가 아예 없다면 'dates', 다 있다면 바로 'home'
+      if (!state.consent) {
+        ui.screen = 'consent';
+      } else if (!state.starts || state.starts.length === 0) {
+        ui.screen = 'dates';
+      } else {
+        ui.screen = 'home';
+      }
+    }
     ui.datesMode = 'onboarding';
     ui.draft = draftFromState();
     if (!viewOnly && Store.mode() === 'memory') ui.storageLost = true;
