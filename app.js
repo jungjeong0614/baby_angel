@@ -766,7 +766,7 @@ function initUi() {
   function consentScreen() {
     return h('main', { class: 'screen' },
       topBar(null, null),
-      h('img', { class: 'hero-img', src: 'https://babyangel-pi.vercel.app/thumbnail5.png', alt: '생리주기만 입력하면 가임기와 배란일을 알려줘요!' }),
+      h('img', { class: 'hero-img', src: 'https://babyangel-pi.vercel.app/ogimage.png', alt: '생리주기만 입력하면 가임기와 배란일을 알려줘요!' }),
       h('p', { class: 'consent-note', text: '참고용 예측이에요 · 내 기기에만 저장돼요 · 필요한 건강정보만 다뤄요' }),
       h('div', { class: 'footer-actions' },
         h('button', { class: 'btn', type: 'button', id: 'consent-ok', 'data-fid': 'consent-ok', text: '동의하고 시작하기', onclick: function () {
