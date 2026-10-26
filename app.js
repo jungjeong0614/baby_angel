@@ -1201,12 +1201,27 @@
     // 관계일 · 생리 시작 · 생리 종료는 한 묶음(한 줄)
     var bundle = h('div', { class: 'chips', id: pfx + 'rec-bundle', role: 'group', 'aria-label': '관계일·생리 기록' });
     if (state.settings.sex) bundle.appendChild(chip('rec-sex', '관계일', rec.sex, future, function () { setRecord(iso, 'sex'); }));
+   
     if (isStart) {
       if (iso === last && state.starts.length > 2) bundle.appendChild(chip('rec-period-cancel', '생리 기록 취소', true, false, function () { cancelPeriod(iso); }));
     } else {
       bundle.appendChild(chip('rec-period', '생리', false, future, function () { recordPeriod(iso); }));
     }
     // 생리 종료 기록 (복구): 이날이 종료일로 기록돼 있으면 '취소', 아니면 '생리 종료'
+    if (inRange) {
+      if (endIso === iso) bundle.appendChild(chip('rec-period-end-cancel', '생리 종료 취소', true, false, function () { cancelPeriodEnd(ctxStart); }));
+      else bundle.appendChild(chip('rec-period-end', '생리 종료', false, future, function () { recordPeriodEnd(iso); }));
+    }
+    if (bundle.children.length) sec.appendChild(bundle);
+    
+    // 👇 아내 화면일 때만 관계일 기록 버튼이 보이도록 수정
+    if (state.settings.sex && !viewOnly) bundle.appendChild(chip('rec-sex', '관계일', rec.sex, future, function () { setRecord(iso, 'sex'); }));
+    
+    if (isStart) {
+      if (iso === last && state.starts.length > 2) bundle.appendChild(chip('rec-period-cancel', '생리 기록 취소', true, false, function () { cancelPeriod(iso); }));
+    } else {
+      bundle.appendChild(chip('rec-period', '생리', false, future, function () { recordPeriod(iso); }));
+    }
     if (inRange) {
       if (endIso === iso) bundle.appendChild(chip('rec-period-end-cancel', '생리 종료 취소', true, false, function () { cancelPeriodEnd(ctxStart); }));
       else bundle.appendChild(chip('rec-period-end', '생리 종료', false, future, function () { recordPeriodEnd(iso); }));
@@ -1277,8 +1292,6 @@
       var rr = state.records[iso];
       var hasRec = !!rr || isActualStart;
 
-      
-
       // 관계일: 기록 사용 + 표시 설정이 모두 켜져 있으면 ♥
       var sexMark = !!(rr && rr.sex && state.settings.sex && state.settings.sexMark);
 
@@ -1296,7 +1309,7 @@
       var ev = '';
       if (info && info.isOvulation) ev = '◆';
       else if (isActualStart) ev = '▲';
-     //else if (info && info.period === 'predicted') ev = '△';
+      //else if (info && info.period === 'predicted') ev = '△';
 
       var attrs = {
         class: cls, type: 'button', 'data-date': iso, 'data-fid': 'cell-' + iso, 'aria-label': cellLabel(day, info, comp, hasRec, sexMark),
