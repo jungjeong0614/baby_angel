@@ -1293,7 +1293,7 @@ function recordsBlock(iso, pfx) {
 
       var ev = '';
       if (info && info.isOvulation) ev = '◆';
-      else if (isActualStart) ev = '▲';
+      //else if (isActualStart) ev = '▲';
       //else if (info && info.period === 'predicted') ev = '△';
 
       var attrs = {
@@ -1404,7 +1404,7 @@ function homeScreen() {
       h('div', { class: 'top' }, 
         h('h1', { 'data-title': '1', text: '임신 준비 캘린더' }),
         h('div', { class: 'mini-btns' },
-          h('button', { class: 'link-btn', type: 'button', text: '남편에게 공유하기', onclick: showShareModal }),
+          h('button', { class: 'link-btn', type: 'button', text: '남편에게 공유하기🔗 ', onclick: showShareModal }),
           h('button', { class: 'icon-btn', type: 'button', id: 'btn-settings', 'data-fid': 'btn-settings', 'aria-label': '설정', onclick: function () {
             if (typeof window.gtag === 'function') window.gtag('event', 'click_button', { button_name: '홈_설정' });
             go('settings');
