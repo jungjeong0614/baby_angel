@@ -1025,7 +1025,7 @@ function buildShareUrl() {
         function () { toast('복사하지 못했어요. 다시 시도해 주세요', true); });
     } else toast('이 브라우저에서는 복사를 지원하지 않아요', true);
   }
-  function shareCalendar() {
+function shareCalendar() {
     if (!state.nick) {
       toast('먼저 닉네임을 설정해 주세요', true);
       ui.datesMode = 'edit'; ui.draft = draftFromState(); go('dates');
@@ -1033,8 +1033,23 @@ function buildShareUrl() {
     }
     if (typeof window.gtag === 'function') window.gtag('event', 'click_button', { button_name: '설정_캘린더공유' });
     var url = buildShareUrl();
-    if (navigator.share) navigator.share({ title: state.nick + '님의 임신 준비 캘린더', url: url }).catch(function () { copyShare(url); });
-    else copyShare(url);
+    
+    // navigator.share가 지원되고, 에러가 나더라도 안전하게 처리
+    if (navigator.share) {
+      navigator.share({
+        title: state.nick + '님의 임신 준비 캘린더',
+        text: '가임기 측정 캘린더를 공유합니다.', // 모바일 브라우저에 따라 텍스트가 필수일 수 있음
+        url: url
+      }).catch(function (err) {
+        // 사용자가 공유 창을 단순 취소한 게 아니라면 복사 기능 수행
+        if (err.name !== 'AbortError') {
+          console.log('Share error:', err);
+        }
+        copyShare(url);
+      });
+    } else {
+      copyShare(url);
+    }
   }
 
   function settingsScreen() {
