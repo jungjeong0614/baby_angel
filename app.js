@@ -1135,7 +1135,18 @@ function settingsScreen() {
             shareCalendar();
           } })
         ),
-     function confirmDeleteAll() {
+        // 👇 누락되었던 전체 삭제 버튼 복구 완료
+        h('button', { class: 'btn danger', type: 'button', id: 'set-delete-all', text: '내 정보 전체 삭제', onclick: function () {
+          if (typeof window.gtag === 'function') window.gtag('event', 'click_button', { button_name: '설정_데이터전체삭제' });
+          confirmDeleteAll();
+        } }),
+        h('p', { class: 'muted email-contact', text: '문의 prayforyou.official@gmail.com' })
+      )
+    );
+  }
+
+  // 👇 confirmDeleteAll 함수는 settingsScreen 바깥쪽에 독립적으로 위치해야 합니다!
+  function confirmDeleteAll() {
     openModal({
       title: '모든 정보를 삭제할까요?',
       body: para('닉네임, 생리 시작일, 체크 항목과 기록, 설정이 모두 지워지고 되돌릴 수 없어요.'),
@@ -1146,7 +1157,7 @@ function settingsScreen() {
         } },
         { label: '취소', kind: 'ghost', id: 'delete-cancel' }
       ]
-   });
+    });
   }
 
   /* =============== 체크·기록 동작 =============== */
