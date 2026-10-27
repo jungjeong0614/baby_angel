@@ -3,7 +3,8 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta http-equiv="Content-Security-Policy" content="default-src 'self' 'unsafe-inline' https://www.googletagmanager.com https://pagead2.googlesyndication.com https://googleads.g.doubleclick.net https://www.google-analytics.com https://tpc.googlesyndication.com https://ads-partners.coupang.com https://*.coupangcdn.com; script-src 'self' 'unsafe-inline' https://ads-partners.coupang.com https://*.coupangcdn.com https://pagead2.googlesyndication.com https://googlesyndication.com; script-src-elem 'self' 'unsafe-inline' https://ads-partners.coupang.com https://*.coupangcdn.com https://pagead2.googlesyndication.com; connect-src 'self' https://*.google-analytics.com https://*.analytics.google.com https://*.googletagmanager.com https://pagead2.googlesyndication.com https://googleads.g.doubleclick.net https://ads-partners.coupang.com https://*.adtrafficquality.google; img-src 'self' data: https:;"><meta name="referrer" content="no-referrer">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self' 'unsafe-inline' https://www.googletagmanager.com https://pagead2.googlesyndication.com https://googleads.g.doubleclick.net https://www.google-analytics.com https://tpc.googlesyndication.com https://ads-partners.coupang.com https://*.coupangcdn.com; script-src 'self' 'unsafe-inline' https://ads-partners.coupang.com https://*.coupangcdn.com https://pagead2.googlesyndication.com https://googlesyndication.com; script-src-elem 'self' 'unsafe-inline' https://ads-partners.coupang.com https://*.coupangcdn.com https://pagead2.googlesyndication.com; connect-src 'self' https://*.google-analytics.com https://*.analytics.google.com https://*.googletagmanager.com https://pagead2.googlesyndication.com https://googleads.g.doubleclick.net https://ads-partners.coupang.com https://*.adtrafficquality.google; img-src 'self' data: https:;">
+<meta name="referrer" content="no-referrer">
 <meta name="color-scheme" content="light">
   <!-- URL 공유 썸네일(Open Graph) 설정 -->
 <meta property="og:title" content="우리 아기 만나기 캘린더">
@@ -12,6 +13,7 @@
 <meta property="og:type" content="website">
 <meta property="og:url" content="https://babyangel-pi.vercel.app">
 <title>우리 아기 만나기 캘린더</title>
+
 <!-- Google Tag Manager -->
 <script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
 new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
@@ -19,38 +21,41 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
 'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
 })(window,document,'script','dataLayer','GTM-5N6DHBMK');</script>
 <!-- End Google Tag Manager -->
+
 <!-- Google tag (gtag.js) -->
 <script async src="https://www.googletagmanager.com/gtag/js?id=G-1WP62Y5F7M"></script>
 <script>
   window.dataLayer = window.dataLayer || [];
   function gtag(){dataLayer.push(arguments);}
   gtag('js', new Date());
-  /* page_location에서 해시(#s=...: 남편 공유 링크 데이터)를 제외해 건강정보가 GA로 전송되지 않게 함 */
   gtag('config', 'G-1WP62Y5F7M', { page_location: location.origin + location.pathname });
 </script>
 
-<!-- 구글 애드센스 코드 -->
-<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-9419624407917113"
-     crossorigin="anonymous"></script>
+<!-- 구글 애드센스 스크립트 -->
+<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-9419624407917113" crossorigin="anonymous"></script>
+
 <link rel="stylesheet" href="./style.css">
 </head>
 <body>
 <!-- Google Tag Manager (noscript) -->
-<noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-5N6DHBMK"
-height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
+<noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-5N6DHBMK" height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 <!-- End Google Tag Manager (noscript) -->
 
-<!-- 👇 모든 페이지 최상단에 고정으로 노출될 쿠팡 파트너스 배너 영역 -->
-<div style="text-align: center; background: #fff; padding: 6px 0; overflow: hidden;">
+<!-- 1. 최상단 쿠팡 배너 영역 -->
+<div style="text-align: center; background: #fff; padding: 6px 0; overflow: hidden; width: 100%;">
   <script src="https://ads-partners.coupang.com/g.js"></script>
   <script>
     new PartnersCoupang.G({"id":1043701,"template":"carousel","trackingCode":"AF7832204","subId":"MMHHKK111","width":"680","height":"140","tsource":""});
   </script>
 </div>
 
+<!-- 2. 내 캘린더 웹앱이 그려지는 실제 공간 -->
 <div id="app" class="app"></div>
+
 <div id="toast" class="toast" popover="manual" role="status" aria-live="polite"></div>
 <noscript><p style="padding:24px">이 서비스를 사용하려면 JavaScript가 필요해요.</p></noscript>
+
+<!-- 3. 핵심 자바스크립트 파일 -->
 <script src="./app.js"></script>
 </body>
 </html>
