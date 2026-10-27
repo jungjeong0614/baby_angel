@@ -1479,25 +1479,34 @@ return h('main', { class: 'screen' },
   }
   /* =============== 남편에게 공유하기 팝업 함수 =============== */
 function showShareModal() {
-    openModal({
-      title: '👨‍👩‍👦 남편에게 캘린더 공유',
-      body: h('div', null,
-        h('p', { class: 'muted' }, [
-          h('br'), // 윗쪽에 빈 줄 추가
-          '닉네임과 생리기간, 가임기, 배란일이 공유돼요!',
-          h('br'), // 문장 사이 줄바꿈
-          '링크를 아는 사람은 누구나 볼 수 있으니 남편에게만 보내주세요.',
-          h('br')  // 아랫쪽에 빈 줄 추가
-          h('button', { class: 'btn secondary', type: 'button', id: 'share-copy', text: '🔗 공유 링크 보내기', onclick: function () {
-          if (typeof window.gtag === 'function') window.gtag('event', 'click_button', { button_name: '홈_남편공유_팝업_보내기' });
+  openModal({
+    title: '👨‍👩‍👦 남편에게 캘린더 공유',
+    body: h('div', null, [
+      h('p', { class: 'muted' }, [
+        h('br'), // 윗쪽에 빈 줄 추가
+        '닉네임과 생리기간, 가임기, 배란일이 공유돼요!',
+        h('br'), // 문장 사이 줄바꿈
+        '링크를 아는 사람은 누구나 볼 수 있으니 남편에게만 보내주세요.',
+        h('br')  // 아랫쪽에 빈 줄 추가
+      ]),
+      h('button', {
+        class: 'btn secondary',
+        type: 'button',
+        id: 'share-copy',
+        text: '🔗 공유 링크 보내기',
+        onclick: function () {
+          if (typeof window.gtag === 'function') {
+            window.gtag('event', 'click_button', { button_name: '홈_남편공유_팝업_보내기' });
+          }
           shareCalendar();
-        } })
-      ),
-      actions: [
-        { label: '닫기', kind: 'ghost', id: 'share-modal-close' }
-      ]
-    });
-  }
+        }
+      })
+    ]),
+    actions: [
+      { label: '닫기', kind: 'ghost', id: 'share-modal-close' }
+    ]
+  });
+}
   function initToday() {
     var td = todayDay(), p = C.dayToParts(td);
     ui.selected = C.dayToISO(td); ui.month = { y: p.y, m: p.m };
