@@ -774,7 +774,7 @@ function initUi() {
       h('div', { class: 'footer-actions' },
         h('button', { class: 'btn', type: 'button', id: 'consent-ok', 'data-fid': 'consent-ok', text: '동의하고 시작하기', onclick: function () {
           // 👇 GA 추적 코드 추가
-          if (typeof window.gtag === 'function') window.gtag('event', 'click_button', { button_name: '동의하고_시작하기' });
+          if (typeof window.gtag === 'function') window.gtag('event', 'click_button', { button_name: '홈_동의하고시작하기' });
           state.consent = true; save(); ui.datesMode = 'onboarding'; go('dates');
         } }),
         h('button', { class: 'link-btn', type: 'button', id: 'consent-policy', text: '자세히 보기', onclick: showPolicy }),
@@ -807,7 +807,7 @@ function initUi() {
     }
     function onNext() {
       // 👇 GA 추적 코드 유지됨
-      if (typeof window.gtag === 'function') window.gtag('event', 'click_button', { button_name: edit ? '생리기간_저장하기' : '생리기간_다음' });
+      if (typeof window.gtag === 'function') window.gtag('event', 'click_button', { button_name: edit ? '생리기간_저장하기' : '첫세팅_생리_저장' });
       var l = list(), v = C.validatePeriods(l, td);
       if (!v.ok) { update(); return; }
       if (!C.cleanNick(d.nick)) { update(); return; }
@@ -830,7 +830,7 @@ function initUi() {
         h('p', { class: 'group-label', text: title }),
         h('div', { class: 'field-pair' }, field(sid, '시작일', sKey, title + ' 시작일'), field(eid, '종료일 (선택)', eKey, title + ' 종료일')));
     }
-    var nickInp = h('input', { type: 'text', id: 'in-nick', maxlength: String(C.NICK_MAX), placeholder: '예: 하늘맘', autocomplete: 'nickname', 'aria-label': '닉네임', 'data-fid': 'in-nick' });
+    var nickInp = h('input', { type: 'text', id: 'in-nick', maxlength: String(C.NICK_MAX), placeholder: '예: 하늘맘 (필수)', autocomplete: 'nickname', 'aria-label': '닉네임', 'data-fid': 'in-nick' });
     nickInp.value = d.nick || '';
     nickInp.addEventListener('input', function () { d.nick = nickInp.value; update(); });
     var nickField = h('label', { class: 'field' }, h('span', { class: 'label', text: '닉네임 (필수 · 최대 ' + C.NICK_MAX + '자)' }), nickInp);
@@ -1052,58 +1052,86 @@ function shareCalendar() {
     }
   }
 
-  function settingsScreen() {
+function settingsScreen() {
     var sums = state.starts.map(function (x) { var a = C.mdLabel(C.isoToDay(x)); return state.ends[x] ? a + '~' + C.mdLabel(C.isoToDay(state.ends[x])) : a; }).join(', ');
     return h('main', { class: 'screen' },
-      topBar('설정', function () { go('home'); }),
+      topBar('설정', function () { 
+        if (typeof window.gtag === 'function') window.gtag('event', 'click_button', { button_name: '설정_뒤로가기' });
+        go('home'); 
+      }),
       h('div', { class: 'list' },
-        h('button', { class: 'row-btn', type: 'button', id: 'set-dates', 'data-fid': 'set-dates', onclick: function () { ui.datesMode = 'edit'; ui.draft = draftFromState(); go('dates'); } },
+        h('button', { class: 'row-btn', type: 'button', id: 'set-dates', 'data-fid': 'set-dates', onclick: function () { 
+          if (typeof window.gtag === 'function') window.gtag('event', 'click_button', { button_name: '설정_닉네임생리수정' });
+          ui.datesMode = 'edit'; ui.draft = draftFromState(); go('dates'); 
+        } },
           h('div', { class: 'grow' }, h('div', { class: 'name', text: '닉네임 · 생리 수정' }), h('div', { class: 'desc', text: (state.nick ? state.nick + ' · ' : '') + sums })), icon('next')),
-        h('button', { class: 'row-btn', type: 'button', id: 'set-manage', 'data-fid': 'set-manage', onclick: function () { go('manage'); } },
+        h('button', { class: 'row-btn', type: 'button', id: 'set-manage', 'data-fid': 'set-manage', onclick: function () { 
+          if (typeof window.gtag === 'function') window.gtag('event', 'click_button', { button_name: '설정_체크항목관리' });
+          go('manage'); 
+        } },
           h('div', { class: 'grow' }, h('div', { class: 'name', text: '체크 항목 관리' })), icon('next'))),
+      
       h('div', { class: 'list-title', text: '기록' }),
       h('div', { class: 'list' },
         h('div', { class: 'row' }, h('div', { class: 'grow' }, h('div', { class: 'name', text: '관계일 기록 사용' }), h('div', { class: 'desc', text: '날짜마다 관계일을 남길 수 있어요' })),
-          switchBtn('관계일 기록 사용', state.settings.sex, function () { pushState(function () { state.settings.sex = !state.settings.sex; }); }, 'sw-sex')),
+          switchBtn('관계일 기록 사용', state.settings.sex, function () { 
+            if (typeof window.gtag === 'function') window.gtag('event', 'click_button', { button_name: '설정_관계일' });
+            pushState(function () { state.settings.sex = !state.settings.sex; }); 
+          }, 'sw-sex')),
+        
         h('div', { class: 'row' + (state.settings.sex ? '' : ' is-off') }, h('div', { class: 'grow' }, h('div', { class: 'name', text: '캘린더에 ♥로 표시' }), h('div', { class: 'desc', text: '끄면 눈에 띄지 않는 작은 점으로만 표시돼요' })),
           h('button', { class: 'switch', type: 'button', role: 'switch', id: 'sw-sexmark', 'aria-checked': state.settings.sexMark ? 'true' : 'false', 'aria-label': '캘린더에 ♥로 표시', disabled: !state.settings.sex, 'data-fid': 'sw-sexmark',
-            onclick: function () { pushState(function () { state.settings.sexMark = !state.settings.sexMark; }); } })),
+            onclick: function () { 
+              if (typeof window.gtag === 'function') window.gtag('event', 'click_button', { button_name: '설정_하트표시' });
+              pushState(function () { state.settings.sexMark = !state.settings.sexMark; }); 
+            } })),
+        
         h('div', { class: 'row' }, h('div', { class: 'grow' }, h('div', { class: 'name', text: '임신 확인 모드' }), h('div', { class: 'desc', text: '가임기·검사 시기 표시를 숨겨요' })),
-          switchBtn('임신 확인 모드', state.settings.pregnancy, function () { setPregnancy(!state.settings.pregnancy); }, 'sw-preg'))),
+          switchBtn('임신 확인 모드', state.settings.pregnancy, function () { 
+            if (typeof window.gtag === 'function') window.gtag('event', 'click_button', { button_name: '설정_임신확인모드' });
+            setPregnancy(!state.settings.pregnancy); 
+          }, 'sw-preg'))),
+      
       h('div', { class: 'list-title', text: '안내' }),
       h('div', { class: 'list' },
-        h('button', { class: 'row-btn', type: 'button', id: 'set-help', onclick: showHelp }, h('div', { class: 'grow' }, h('div', { class: 'name', text: '계산 방식과 도움말' })), icon('next')),
-        h('button', { class: 'row-btn', type: 'button', id: 'set-policy', onclick: showPolicy }, h('div', { class: 'grow' }, h('div', { class: 'name', text: '개인정보 안내' })), icon('next'))),
+        h('button', { class: 'row-btn', type: 'button', id: 'set-help', onclick: function () {
+          if (typeof window.gtag === 'function') window.gtag('event', 'click_button', { button_name: '설정_도움말보기' });
+          showHelp();
+        } }, h('div', { class: 'grow' }, h('div', { class: 'name', text: '계산 방식과 도움말' })), icon('next')),
+        
+        h('button', { class: 'row-btn', type: 'button', id: 'set-policy', onclick: function () {
+          if (typeof window.gtag === 'function') window.gtag('event', 'click_button', { button_name: '설정_개인정보안내' });
+          showPolicy();
+        } }, h('div', { class: 'grow' }, h('div', { class: 'name', text: '개인정보 안내' })), icon('next'))),
+      
       h('p', { class: 'note', text: '기록은 최근 24개월까지 보관하고, 오래된 기록은 자동으로 지워져요. 모든 정보는 이 기기 안에만 있어요.' }),
 
       h('div', { class: 'footer-actions' },
-h('div', { class: 'card' },
+        h('div', { class: 'card' },
           h('h3', { text: '👨‍👩‍👦 남편에게 캘린더 공유' }),
-          h('p', { class: 'muted', text: '닉네임과 생리기간, 가임기, 배란일이 공유돼요! 링크를 아는 사람은 누구나 볼 수 있으니 남편에게만 보내주세요.' }), // 👈 '배란일' 수정 및 불필요한 마침표 정리
-          h('button', { class: 'btn secondary', type: 'button', id: 'share-copy', text: '🔗 공유 링크 보내기', onclick: shareCalendar })
+          h('p', { class: 'muted' }, [
+            h('br'),
+            '닉네임과 생리기간, 가임기, 배란일이 공유돼요!',
+            h('br'),
+            h('br'),
+            '링크를 아는 사람은 누구나 볼 수 있으니 남편에게만 보내주세요.',
+            h('br')
+          ]),
+          h('button', { class: 'btn secondary', type: 'button', id: 'share-copy', text: '🔗 공유 링크 보내기', onclick: function () {
+            if (typeof window.gtag === 'function') window.gtag('event', 'click_button', { button_name: '설정_남편공유' });
+            shareCalendar();
+          } })
         ),
-        // GA 추적 코드가 포함된 데이터 전체 삭제 버튼
+        
+        // 내 정보 전체 삭제 버튼
         h('button', { class: 'btn danger', type: 'button', id: 'set-delete-all', text: '내 정보 전체 삭제', onclick: function () {
           if (typeof window.gtag === 'function') window.gtag('event', 'click_button', { button_name: '설정_데이터전체삭제' });
           confirmDeleteAll();
         } }),
+        
         h('p', { class: 'muted email-contact', text: '문의 prayforyou.official@gmail.com' })
       )
     );
-  }
-  function setPregnancy(on) { pushState(function () { state.settings.pregnancy = on; }); toast(on ? '임신 확인 모드로 바꿨어요' : '가임기 표시를 다시 켰어요'); }
-
-  function confirmDeleteAll() {
-    openModal({
-      title: '모든 정보를 삭제할까요?',
-      body: para('닉네임, 생리 시작일, 체크 항목과 기록, 설정이 모두 지워지고 되돌릴 수 없어요.'),
-      actions: [
-        { label: '삭제하기', kind: 'danger', id: 'delete-confirm', onClick: function () {
-          Store.clear(); state = C.freshState(); planCache = { key: '', plan: null };
-          ui.addDraft = ''; ui.addError = ''; initUi(); ui.storageLost = Store.mode() === 'memory'; go('consent'); toast('모든 정보를 삭제했어요');
-        } },
-        { label: '취소', kind: 'ghost', id: 'delete-cancel' }]
-    });
   }
 
   /* =============== 체크·기록 동작 =============== */
