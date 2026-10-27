@@ -526,32 +526,24 @@
     };
   })();
 
-  /* =============== 오류 처리: 사용자에게는 일반 메시지만, 로그에는 코드만 (SEC-03, SEC-06) =============== */
-
+/* =============== 오류 처리: 사용자에게는 일반 메시지만, 로그에는 코드만 (SEC-03, SEC-06) =============== */
   function reportError(code) {
-
     try { console.error('ppcal.error', code); } catch (e) { /* 무시 */ }
+    
+    // 👇 E-ASYNC(비동기 에러)는 사용자 화면에 배너를 띄우지 않고 무시합니다!
+    if (code === 'E-ASYNC') return;
 
     var app = document.getElementById('app');
-
     if (!app || document.getElementById('err-banner')) return;
-
     var b = document.createElement('div');
-
     b.id = 'err-banner'; b.className = 'banner err'; b.setAttribute('role', 'alert');
-
     b.style.margin = '12px 20px 0';
-
     var t = document.createElement('span'); t.textContent = '문제가 생겼어요. 새로고침한 뒤 다시 시도해 주세요. (오류 코드 ' + code + ')';
-
     b.appendChild(t); app.insertBefore(b, app.firstChild);
-
   }
 
   window.addEventListener('error', function () { reportError('E-RUNTIME'); });
-
   window.addEventListener('unhandledrejection', function () { reportError('E-ASYNC'); });
-
 
   /* =============== 상태 =============== */
   function todayDay() { return C.todayDayFromDate(new Date()); }
