@@ -1086,13 +1086,13 @@ function settingsScreen() {
       
       h('div', { class: 'list-title', text: '기록' }),
       h('div', { class: 'list' },
-        //h('div', { class: 'row' }, h('div', { class: 'grow' }, h('div', { class: 'name', text: '관계일 기록 사용' }), h('div', { class: 'desc', text: '날짜마다 관계일을 남길 수 있어요' })),
+        h('div', { class: 'row' }, h('div', { class: 'grow' }, h('div', { class: 'name', text: '관계일 기록 사용' }), h('div', { class: 'desc', text: '날짜마다 관계일을 남길 수 있어요' })),
           switchBtn('관계일 기록 사용', state.settings.sex, function () { 
             if (typeof window.gtag === 'function') window.gtag('event', 'click_button', { button_name: '설정_관계일' });
             pushState(function () { state.settings.sex = !state.settings.sex; }); 
           }, 'sw-sex')),
         
-        //h('div', { class: 'row' + (state.settings.sex ? '' : ' is-off') }, h('div', { class: 'grow' }, h('div', { class: 'name', text: '캘린더에 ♥로 표시' }), h('div', { class: 'desc', text: '끄면 눈에 띄지 않는 작은 점으로만 표시돼요' })),
+        h('div', { class: 'row' + (state.settings.sex ? '' : ' is-off') }, h('div', { class: 'grow' }, h('div', { class: 'name', text: '캘린더에 ♥로 표시' }), h('div', { class: 'desc', text: '끄면 눈에 띄지 않는 작은 점으로만 표시돼요' })),
           h('button', { class: 'switch', type: 'button', role: 'switch', id: 'sw-sexmark', 'aria-checked': state.settings.sexMark ? 'true' : 'false', 'aria-label': '캘린더에 ♥로 표시', disabled: !state.settings.sex, 'data-fid': 'sw-sexmark',
             onclick: function () { 
               if (typeof window.gtag === 'function') window.gtag('event', 'click_button', { button_name: '설정_하트표시' });
