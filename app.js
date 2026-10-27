@@ -1475,11 +1475,7 @@ return h('main', { class: 'screen' },
         setPregnancy(false); 
       } })) : null,
       calCard,
-      panel(plan),
-      
-      // 👇 여기에 추가
-      coupangBanner() 
-    );
+      panel(plan));
   }
   /* =============== 쿠팡 배너 ================================*/
   function coupangBanner() {
