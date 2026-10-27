@@ -1475,8 +1475,29 @@ return h('main', { class: 'screen' },
         setPregnancy(false); 
       } })) : null,
       calCard,
-      panel(plan));
+      panel(plan),
+      
+      // 👇 여기에 추가
+      coupangBanner() 
+    );
   }
+  /* =============== 쿠팡 배너 ================================*/
+  function coupangBanner() {
+  var container = document.createElement('div');
+  container.style.textAlign = 'center';
+  container.style.margin = '20px 0';
+
+  var s1 = document.createElement('script');
+  s1.src = "https://ads-partners.coupang.com/g.js";
+  s1.async = true;
+
+  var s2 = document.createElement('script');
+  s2.text = 'new PartnersCoupang.G({"id":1043701,"template":"carousel","trackingCode":"AF7832204","subId":"MMHHKK111","width":"680","height":"140","tsource":""});';
+
+  container.appendChild(s1);
+  container.appendChild(s2);
+  return container;
+}
   /* =============== 남편에게 공유하기 팝업 함수 =============== */
 function showShareModal() {
   openModal({
