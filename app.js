@@ -1122,16 +1122,18 @@ function settingsScreen() {
             shareCalendar();
           } })
         ),
-        
-        // 내 정보 전체 삭제 버튼
-        h('button', { class: 'btn danger', type: 'button', id: 'set-delete-all', text: '내 정보 전체 삭제', onclick: function () {
-          if (typeof window.gtag === 'function') window.gtag('event', 'click_button', { button_name: '설정_데이터전체삭제' });
-          confirmDeleteAll();
-        } }),
-        
-        h('p', { class: 'muted email-contact', text: '문의 prayforyou.official@gmail.com' })
-      )
-    );
+     function confirmDeleteAll() {
+    openModal({
+      title: '모든 정보를 삭제할까요?',
+      body: para('닉네임, 생리 시작일, 체크 항목과 기록, 설정이 모두 지워지고 되돌릴 수 없어요.'),
+      actions: [
+        { label: '삭제하기', kind: 'danger', id: 'delete-confirm', onClick: function () {
+          Store.clear(); state = C.freshState(); planCache = { key: '', plan: null };
+          ui.addDraft = ''; ui.addError = ''; initUi(); ui.storageLost = Store.mode() === 'memory'; go('consent'); toast('모든 정보를 삭제했어요');
+        } },
+        { label: '취소', kind: 'ghost', id: 'delete-cancel' }
+      ]
+    });
   }
 
   /* =============== 체크·기록 동작 =============== */
@@ -1477,23 +1479,7 @@ return h('main', { class: 'screen' },
       calCard,
       panel(plan));
   }
-  /* =============== 쿠팡 배너 ================================*/
-  function coupangBanner() {
-  var container = document.createElement('div');
-  container.style.textAlign = 'center';
-  container.style.margin = '20px 0';
 
-  var s1 = document.createElement('script');
-  s1.src = "https://ads-partners.coupang.com/g.js";
-  s1.async = true;
-
-  var s2 = document.createElement('script');
-  s2.text = 'new PartnersCoupang.G({"id":1043701,"template":"carousel","trackingCode":"AF7832204","subId":"MMHHKK111","width":"680","height":"140","tsource":""});';
-
-  container.appendChild(s1);
-  container.appendChild(s2);
-  return container;
-}
   /* =============== 남편에게 공유하기 팝업 함수 =============== */
 function showShareModal() {
   openModal({
