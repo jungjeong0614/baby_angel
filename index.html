@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta http-equiv="Content-Security-Policy" content="default-src 'self' 'unsafe-inline' https://www.googletagmanager.com https://pagead2.googlesyndication.com https://googleads.g.doubleclick.net https://www.google-analytics.com https://tpc.googlesyndication.com; connect-src 'self' https://*.google-analytics.com https://*.analytics.google.com https://*.googletagmanager.com https://pagead2.googlesyndication.com https://googleads.g.doubleclick.net; img-src 'self' data: https:; style-src 'self' 'unsafe-inline';">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self' 'unsafe-inline' https://www.googletagmanager.com https://pagead2.googlesyndication.com https://googleads.g.doubleclick.net https://www.google-analytics.com https://tpc.googlesyndication.com https://ads-partners.coupang.com; connect-src 'self' https://*.google-analytics.com https://*.analytics.google.com https://*.googletagmanager.com https://pagead2.googlesyndication.com https://googleads.g.doubleclick.net https://ads-partners.coupang.com; img-src 'self' data: https:; style-src 'self' 'unsafe-inline';">
 <meta name="referrer" content="no-referrer">
 <meta name="color-scheme" content="light">
   <!-- URL 공유 썸네일(Open Graph) 설정 -->
@@ -40,6 +40,15 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
 <noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-5N6DHBMK"
 height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 <!-- End Google Tag Manager (noscript) -->
+
+<!-- 👇 모든 페이지 최상단에 고정으로 노출될 쿠팡 파트너스 배너 영역 -->
+<div style="text-align: center; background: #fff; padding: 6px 0; overflow: hidden;">
+  <script src="https://ads-partners.coupang.com/g.js"></script>
+  <script>
+    new PartnersCoupang.G({"id":1043701,"template":"carousel","trackingCode":"AF7832204","subId":"MMHHKK111","width":"680","height":"140","tsource":""});
+  </script>
+</div>
+
 <div id="app" class="app"></div>
 <div id="toast" class="toast" popover="manual" role="status" aria-live="polite"></div>
 <noscript><p style="padding:24px">이 서비스를 사용하려면 JavaScript가 필요해요.</p></noscript>
