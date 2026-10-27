@@ -1146,7 +1146,7 @@ function settingsScreen() {
         } },
         { label: '취소', kind: 'ghost', id: 'delete-cancel' }
       ]
-    });
+   });
   }
 
   /* =============== 체크·기록 동작 =============== */
