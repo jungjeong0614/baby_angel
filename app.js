@@ -526,34 +526,33 @@
     };
   })();
 
-/* =============== 오류 처리: 사용자에게는 일반 메시지만, 로그에는 코드만 (SEC-03, SEC-06) =============== */
+  /* =============== 오류 처리: 사용자에게는 일반 메시지만, 로그에는 코드만 (SEC-03, SEC-06) =============== */
+
   function reportError(code) {
+
     try { console.error('ppcal.error', code); } catch (e) { /* 무시 */ }
-    
+
     var app = document.getElementById('app');
-    // 👇 app이 없거나 이미 에러 배너가 있으면 여기서 안전하게 멈춥니다 (에러 방지)
+
     if (!app || document.getElementById('err-banner')) return;
-    
+
     var b = document.createElement('div');
-    b.id = 'err-banner'; 
-    b.className = 'banner err'; 
-    b.setAttribute('role', 'alert');
+
+    b.id = 'err-banner'; b.className = 'banner err'; b.setAttribute('role', 'alert');
+
     b.style.margin = '12px 20px 0';
-    
-    var t = document.createElement('span'); 
-    t.textContent = '문제가 생겼어요. 새로고침한 뒤 다시 시도해 주세요. (오류 코드 ' + code + ')';
-    b.appendChild(t); 
-    
-    // 👇 app이 확실히 존재할 때만 insertBefore 실행
-    if (app.firstChild) {
-      app.insertBefore(b, app.firstChild);
-    } else {
-      app.appendChild(b);
-    }
+
+    var t = document.createElement('span'); t.textContent = '문제가 생겼어요. 새로고침한 뒤 다시 시도해 주세요. (오류 코드 ' + code + ')';
+
+    b.appendChild(t); app.insertBefore(b, app.firstChild);
+
   }
 
   window.addEventListener('error', function () { reportError('E-RUNTIME'); });
+
   window.addEventListener('unhandledrejection', function () { reportError('E-ASYNC'); });
+
+
   /* =============== 상태 =============== */
   function todayDay() { return C.todayDayFromDate(new Date()); }
   function todayISO() { return C.dayToISO(todayDay()); }
